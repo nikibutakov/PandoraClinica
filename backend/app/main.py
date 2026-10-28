@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import admin, auth
+from app.routers import admin, auth, registrar
 
 app = FastAPI(
     title="Pandora Clinica API",
@@ -28,3 +28,4 @@ def healthz() -> dict:
 
 app.include_router(auth.router, prefix="/api/auth", tags=["Аутентификация"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Администратор"])
+app.include_router(registrar.router, prefix="/api/registrar", tags=["Регистратура"])
