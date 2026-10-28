@@ -9,7 +9,7 @@ from sqlalchemy import engine_from_config, pool
 # Чтобы env.py находил models.py при запуске из любой директории
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from models import Base  # noqa: E402
+from app.models import Base  # noqa: E402
 
 config = context.config
 
