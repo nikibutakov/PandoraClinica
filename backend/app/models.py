@@ -193,7 +193,8 @@ class Slot(Base):
         comment="Дублирует шаблон, но нужен для слотов вне шаблона",
     )
     template_id: Mapped[int | None] = mapped_column(
-        ForeignKey("schedule_template.id"), comment="NULL — слот создан вручную"
+        ForeignKey("schedule_template.id", ondelete="SET NULL"),
+        comment="NULL — слот создан вручную (или шаблон удалён)",
     )
     starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     ends_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
