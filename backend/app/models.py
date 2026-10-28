@@ -334,6 +334,9 @@ class MedicalRecord(Base):
     appointment_id: Mapped[int | None] = mapped_column(
         ForeignKey("appointment.id"), unique=True, comment="NULL — приём без записи"
     )
+    ticket_id: Mapped[int | None] = mapped_column(
+        ForeignKey("ticket.id"), unique=True, comment="Талон, по которому состоялся приём"
+    )
     patient_id: Mapped[int] = mapped_column(ForeignKey("patient.id"))
     doctor_id: Mapped[int] = mapped_column(ForeignKey("doctor.id"))
     complaints: Mapped[str | None] = mapped_column(Text, comment="Жалобы")
