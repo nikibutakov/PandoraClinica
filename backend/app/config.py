@@ -9,7 +9,8 @@ class Settings(BaseSettings):
     # Совпадает с docker-compose.yml; переопределяется переменной DATABASE_URL
     database_url: str = "postgresql+psycopg2://pandora:pandora@localhost:5432/pandora_clinic"
 
-    secret_key: str = "dev-secret-change-me"
+    # Секрет для JWT. В проде обязательно переопределяется переменной окружения
+    secret_key: str = "dev-secret-please-override-with-env-secret-key"
     access_token_expire_minutes: int = 480  # рабочая смена
 
     # Длина одного слота приёма при генерации из шаблона графика
