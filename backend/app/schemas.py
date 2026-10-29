@@ -338,6 +338,32 @@ class PublicSlotOut(BaseModel):
 
 
 # --------------------------------------------------------------------------- #
+# Табло (ТВ)
+# --------------------------------------------------------------------------- #
+
+
+class BoardTicket(BaseModel):
+    number: int
+    status: TicketStatus  # called | in_progress
+
+
+class BoardRoom(BaseModel):
+    workday_id: int
+    room_id: int
+    room_number: str
+    doctor_id: int
+    doctor_name: str | None
+    specialization_name: str | None
+    current: list[BoardTicket] = []  # вызванные / на приёме
+    waiting_numbers: list[int] = []  # ожидающие, по возрастанию номера
+
+
+class BoardOut(BaseModel):
+    date: date
+    rooms: list[BoardRoom]
+
+
+# --------------------------------------------------------------------------- #
 # Врач: день, очередь, приём
 # --------------------------------------------------------------------------- #
 

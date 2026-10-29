@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
-from app.routers import admin, auth, doctor, public, registrar
+from app.routers import admin, auth, board, doctor, public, registrar
 
 app = FastAPI(
     title="Pandora Clinica API",
@@ -37,3 +37,4 @@ app.include_router(public.router, prefix="/api/public", tags=["Внешний с
 app.include_router(admin.router, prefix="/api/admin", tags=["Администратор"])
 app.include_router(registrar.router, prefix="/api/registrar", tags=["Регистратура"])
 app.include_router(doctor.router, prefix="/api/doctor", tags=["Врач"])
+app.include_router(board.router, prefix="/api/board", tags=["Табло"])
