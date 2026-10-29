@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.models import (
     AppointmentStatus,
+    CallbackStatus,
     ContractStatus,
     ReferralStatus,
     SlotStatus,
@@ -299,6 +300,32 @@ class ReferralOut(BaseModel):
 
 class ReferralStatusIn(BaseModel):
     status: ReferralStatus
+
+
+# --------------------------------------------------------------------------- #
+# Внешний сайт: заявки на перезвон и публичный график
+# --------------------------------------------------------------------------- #
+
+
+class CallbackCreate(BaseModel):
+    phone: str = Field(pattern=r"^\+?[0-9()\-\s]{7,20}$")
+    full_name: str | None = Field(default=None, max_length=200)
+    comment: str | None = Field(default=None, max_length=1000)
+
+
+class CallbackOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    phone: str
+    full_name: str | None
+    comment: str | None
+    status: CallbackStatus
+    created_at: datetime
+
+
+class CallbackStatusIn(BaseModel):
+    status: CallbackStatus
 
 
 # --------------------------------------------------------------------------- #

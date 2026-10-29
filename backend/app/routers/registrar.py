@@ -12,6 +12,8 @@ from app.models import (
     Appointment,
     AppointmentStatus,
     AppUser,
+    CallbackRequest,
+    CallbackStatus,
     Doctor,
     DoctorWorkday,
     Patient,
@@ -29,6 +31,8 @@ from app.models import (
 from app.schemas import (
     AppointmentCreate,
     AppointmentOut,
+    CallbackOut,
+    CallbackStatusIn,
     MorningDoctor,
     MorningOccupied,
     MorningOut,
@@ -422,3 +426,31 @@ def update_referral(referral_id: int, data: ReferralStatusIn, db: Session = Depe
     db.commit()
     db.refresh(referral)
     return referral
+
+
+# --------------------------------------------------------------------------- #
+# Заявки на перезвон с внешнего сайта
+# --------------------------------------------------------------------------- #
+
+
+@router.get("/callbacks", response_model=list[CallbackOut])
+def list_callbacks(
+    status: CallbackStatus | None = None,
+    db: Session = Depends(get_db),
+):
+    stmt = select(CallbackRequest).order_by(CallbackRequest.created_at)
+    if status:
+        stmt = stmt.where(CallbackRequest.status == status)
+    return db.scalars(stmt.limit(200)).all()
+
+
+@router.patch("/callbacks/{callback_id}", response_model=CallbackOut)
+def update_callback(callback_id: int, data: CallbackStatusIn, db: Session = Depends(get_db)):
+    """Взять заявку в работу / закрыть после перезвона."""
+    callback = db.get(CallbackRequest, callback_id)
+    if callback is None:
+        raise HTTPException(404, "Заявка на перезвон не найдена")
+    callback.status = data.status
+    db.commit()
+    db.refresh(callback)
+    return callback
