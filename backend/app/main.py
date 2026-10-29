@@ -2,6 +2,7 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 
 from app.routers import admin, auth, doctor, registrar
 
@@ -24,6 +25,11 @@ app.add_middleware(
 @app.get("/healthz", tags=["Служебные"])
 def healthz() -> dict:
     return {"status": "ok"}
+
+
+@app.get("/", include_in_schema=False)
+def root():
+    return RedirectResponse(url="/docs")
 
 
 app.include_router(auth.router, prefix="/api/auth", tags=["Аутентификация"])
