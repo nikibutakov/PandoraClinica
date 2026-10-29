@@ -438,10 +438,11 @@ def list_callbacks(
     status: CallbackStatus | None = None,
     db: Session = Depends(get_db),
 ):
-    stmt = select(CallbackRequest).order_by(CallbackRequest.created_at)
+    stmt = select(CallbackRequest).order_by(CallbackRequest.created_at.desc())
     if status:
         stmt = stmt.where(CallbackRequest.status == status)
-    return db.scalars(stmt.limit(200)).all()
+    # лимит берёт свежие; в ответе — старые первыми
+    return list(reversed(db.scalars(stmt.limit(200)).all()))
 
 
 @router.patch("/callbacks/{callback_id}", response_model=CallbackOut)

@@ -1,6 +1,10 @@
 """Заявки на перезвон: публичное создание и обработка регистратурой."""
 
-from app.models import UserRole
+from datetime import datetime, timedelta
+
+from sqlalchemy.orm import sessionmaker
+
+from app.models import CallbackRequest, CallbackStatus, UserRole
 from tests.conftest import auth_headers, make_user
 
 
@@ -21,6 +25,12 @@ def test_public_creates_callback(client):
 def test_callback_rejects_bad_phone(client):
     assert client.post("/api/public/callbacks", json={"phone": "abc"}).status_code == 422
     assert client.post("/api/public/callbacks", json={"phone": "12345"}).status_code == 422
+
+
+def test_callback_rejects_nondigit_phone(client):
+    """Телефон — не только разрешённые символы, но и минимум 7 цифр."""
+    assert client.post("/api/public/callbacks", json={"phone": "-------"}).status_code == 422
+    assert client.post("/api/public/callbacks", json={"phone": "(() () - "}).status_code == 422
 
 
 def test_registrar_processes_callbacks(client, db_engine):
@@ -50,3 +60,27 @@ def test_registrar_processes_callbacks(client, db_engine):
 
 def test_callbacks_forbidden_without_registrar(client):
     assert client.get("/api/registrar/callbacks").status_code == 401
+
+
+def test_callbacks_list_shows_newest_beyond_limit(client, db_engine):
+    """Лимит списка не должен прятать свежие заявки: берём последние, а не первые 200."""
+    make_user(db_engine, "reg", UserRole.registrar, "Регина Регистраторовна")
+    reg = auth_headers(client, "reg")
+
+    session = sessionmaker(bind=db_engine, expire_on_commit=False)()
+    session.add_all(
+        CallbackRequest(
+            phone=f"+7 900 000-{i:04d}",
+            status=CallbackStatus.done,
+            created_at=datetime(2026, 1, 1, 12, 0, 0) + timedelta(minutes=i),
+        )
+        for i in range(200)
+    )
+    session.commit()
+    session.close()
+
+    newest = client.post("/api/public/callbacks", json={"phone": "+7 900 999-99-99"}).json()
+    listed = client.get("/api/registrar/callbacks", headers=reg).json()
+    assert len(listed) == 200
+    assert newest["id"] in [item["id"] for item in listed]
+    assert listed[-1]["id"] == newest["id"]  # свежая — последней (старые первыми)

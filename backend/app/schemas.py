@@ -1,8 +1,9 @@
 """Pydantic-схемы запросов и ответов API."""
 
+import re
 from datetime import date, datetime, time
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.models import (
     AppointmentStatus,
@@ -308,9 +309,17 @@ class ReferralStatusIn(BaseModel):
 
 
 class CallbackCreate(BaseModel):
-    phone: str = Field(pattern=r"^\+?[0-9()\-\s]{7,20}$")
+    phone: str
     full_name: str | None = Field(default=None, max_length=200)
     comment: str | None = Field(default=None, max_length=1000)
+
+    @field_validator("phone")
+    @classmethod
+    def check_phone(cls, value: str) -> str:
+        # цифры, скобки, пробелы, дефисы, ведущий «+»; минимум 7 цифр
+        if not re.fullmatch(r"\+?[0-9()\-\s]{7,20}", value) or sum(ch.isdigit() for ch in value) < 7:
+            raise ValueError("Телефон: 7–20 символов (цифры, скобки, пробелы, дефисы, ведущий +), минимум 7 цифр")
+        return value
 
 
 class CallbackOut(BaseModel):
