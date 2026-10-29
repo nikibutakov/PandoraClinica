@@ -61,7 +61,12 @@ def _my_workday(db: Session, doctor: Doctor, d: date) -> DoctorWorkday | None:
     )
 
 
-@router.get("/me/today", response_model=TodayOut)
+@router.get(
+    "/me/today",
+    response_model=TodayOut,
+    summary="Мой день: кабинет и счётчики очереди",
+    tags=["Врач · Смена и очередь"],
+)
 def my_today(
     date_: date | None = Query(None, alias="date", description="по умолчанию сегодня"),
     doctor: Doctor = Depends(get_current_doctor),
@@ -85,7 +90,12 @@ def my_today(
     )
 
 
-@router.get("/queue", response_model=list[QueueItemOut])
+@router.get(
+    "/queue",
+    response_model=list[QueueItemOut],
+    summary="Моя очередь талонов",
+    tags=["Врач · Смена и очередь"],
+)
 def my_queue(
     date_: date | None = Query(None, alias="date", description="по умолчанию сегодня"),
     doctor: Doctor = Depends(get_current_doctor),
@@ -140,7 +150,12 @@ def _ticket_or_403(db: Session, doctor: Doctor, ticket_id: int) -> Ticket:
     return ticket
 
 
-@router.post("/queue/{ticket_id}/call", response_model=TicketOut)
+@router.post(
+    "/queue/{ticket_id}/call",
+    response_model=TicketOut,
+    summary="Вызвать пациента",
+    tags=["Врач · Смена и очередь"],
+)
 def call_patient(ticket_id: int, doctor: Doctor = Depends(get_current_doctor), db: Session = Depends(get_db)):
     """Вызвать следующего пациента — статус попадает на табло."""
     ticket = _ticket_or_403(db, doctor, ticket_id)
@@ -152,7 +167,12 @@ def call_patient(ticket_id: int, doctor: Doctor = Depends(get_current_doctor), d
     return ticket
 
 
-@router.post("/queue/{ticket_id}/skip", response_model=TicketOut)
+@router.post(
+    "/queue/{ticket_id}/skip",
+    response_model=TicketOut,
+    summary="Пациент не дождался",
+    tags=["Врач · Смена и очередь"],
+)
 def skip_patient(ticket_id: int, doctor: Doctor = Depends(get_current_doctor), db: Session = Depends(get_db)):
     """Пациент не дождался или ушёл."""
     ticket = _ticket_or_403(db, doctor, ticket_id)
@@ -164,7 +184,13 @@ def skip_patient(ticket_id: int, doctor: Doctor = Depends(get_current_doctor), d
     return ticket
 
 
-@router.post("/visits", response_model=VisitOut, status_code=201)
+@router.post(
+    "/visits",
+    response_model=VisitOut,
+    status_code=201,
+    summary="Завершить приём: медзапись, диагнозы, направление",
+    tags=["Врач · Приём и направления"],
+)
 def complete_visit(data: VisitIn, doctor: Doctor = Depends(get_current_doctor), db: Session = Depends(get_db)):
     """Завершить приём: запись в медкарте, диагнозы, при необходимости направление."""
     ticket = _ticket_or_403(db, doctor, data.ticket_id)
@@ -237,7 +263,13 @@ def complete_visit(data: VisitIn, doctor: Doctor = Depends(get_current_doctor), 
     return record
 
 
-@router.post("/referrals", response_model=ReferralOut, status_code=201)
+@router.post(
+    "/referrals",
+    response_model=ReferralOut,
+    status_code=201,
+    summary="Выдать направление к специальности",
+    tags=["Врач · Приём и направления"],
+)
 def create_referral(data: ReferralCreate, doctor: Doctor = Depends(get_current_doctor), db: Session = Depends(get_db)):
     """Направление к специальности вне приёма (например, по телефону из кабинета)."""
     if db.get(Patient, data.patient_id) is None:

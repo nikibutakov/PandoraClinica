@@ -22,7 +22,12 @@ from app.utils import clinic_today
 router = APIRouter()
 
 
-@router.get("", response_model=BoardOut)
+@router.get(
+    "",
+    response_model=BoardOut,
+    summary="Очередь для табло: кабинеты, вызванные номера, ожидание",
+    tags=["Табло"],
+)
 def board(
     date_: date | None = Query(None, alias="date", description="по умолчанию сегодня"),
     db: Session = Depends(get_db),

@@ -60,7 +60,12 @@ router = APIRouter(dependencies=[Depends(require_role(UserRole.registrar, UserRo
 # --------------------------------------------------------------------------- #
 
 
-@router.get("/morning", response_model=MorningOut)
+@router.get(
+    "/morning",
+    response_model=MorningOut,
+    summary="Утренний экран: кто должен работать и кто где сидит",
+    tags=["Регистратура · Утро и кабинеты"],
+)
 def morning(
     date_: date | None = Query(None, alias="date", description="по умолчанию сегодня"),
     db: Session = Depends(get_db),
@@ -141,7 +146,13 @@ def morning(
     return MorningOut(date=d, expected=list(expected.values()), occupied=occupied, free_rooms=free_rooms)
 
 
-@router.post("/workdays", response_model=WorkdayOut, status_code=201)
+@router.post(
+    "/workdays",
+    response_model=WorkdayOut,
+    status_code=201,
+    summary="Закрепить врача за кабинетом на день",
+    tags=["Регистратура · Утро и кабинеты"],
+)
 def create_workday(data: WorkdayCreate, db: Session = Depends(get_db)):
     """Утренняя регистрация: врач занимает кабинет на день."""
     doctor = db.get(Doctor, data.doctor_id)
@@ -193,8 +204,16 @@ def create_workday(data: WorkdayCreate, db: Session = Depends(get_db)):
 # --------------------------------------------------------------------------- #
 
 
-@router.get("/patients", response_model=list[PatientOut])
-def search_patients(query: str = "", db: Session = Depends(get_db)):
+@router.get(
+    "/patients",
+    response_model=list[PatientOut],
+    summary="Поиск пациентов",
+    tags=["Регистратура · Пациенты"],
+)
+def search_patients(
+    query: str = Query("", description="Подстрока СНИЛС / ФИО / телефона; пусто — последние 50"),
+    db: Session = Depends(get_db),
+):
     stmt = select(Patient)
     q = query.strip()
     if q:
@@ -209,7 +228,13 @@ def search_patients(query: str = "", db: Session = Depends(get_db)):
     return db.scalars(stmt.order_by(Patient.id.desc()).limit(50)).all()
 
 
-@router.post("/patients", response_model=PatientOut, status_code=201)
+@router.post(
+    "/patients",
+    response_model=PatientOut,
+    status_code=201,
+    summary="Зарегистрировать пациента (можно без СНИЛС)",
+    tags=["Регистратура · Пациенты"],
+)
 def create_patient(data: PatientCreate, db: Session = Depends(get_db)):
     if data.snils and db.scalar(select(Patient).where(Patient.snils == data.snils)):
         raise HTTPException(409, "Пациент с таким СНИЛС уже зарегистрирован")
@@ -234,7 +259,12 @@ def create_patient(data: PatientCreate, db: Session = Depends(get_db)):
     return patient
 
 
-@router.patch("/patients/{patient_id}", response_model=PatientOut)
+@router.patch(
+    "/patients/{patient_id}",
+    response_model=PatientOut,
+    summary="Дозаполнить карточку пациента",
+    tags=["Регистратура · Пациенты"],
+)
 def update_patient(patient_id: int, data: PatientUpdate, db: Session = Depends(get_db)):
     """Дозаполнение карточки: личность установили, появилась страховка и т.п."""
     patient = db.get(Patient, patient_id)
@@ -258,11 +288,16 @@ def update_patient(patient_id: int, data: PatientUpdate, db: Session = Depends(g
 # --------------------------------------------------------------------------- #
 
 
-@router.get("/slots", response_model=list[SlotOut])
+@router.get(
+    "/slots",
+    response_model=list[SlotOut],
+    summary="Свободные слоты по специальности",
+    tags=["Регистратура · Запись и талоны"],
+)
 def free_slots(
-    specialization_id: int,
-    date_from: date | None = None,
-    date_to: date | None = None,
+    specialization_id: int = Query(description="ID специальности — из «Админ · Справочники»"),
+    date_from: date | None = Query(None, description="Дата от, включительно; по умолчанию сегодня"),
+    date_to: date | None = Query(None, description="Дата до, включительно; по умолчанию равна date_from"),
     db: Session = Depends(get_db),
 ):
     """Свободные слоты по специальности — так строится график на внешнем сайте."""
@@ -300,7 +335,13 @@ def free_slots(
     ]
 
 
-@router.post("/appointments", response_model=AppointmentOut, status_code=201)
+@router.post(
+    "/appointments",
+    response_model=AppointmentOut,
+    status_code=201,
+    summary="Записать пациента на слот",
+    tags=["Регистратура · Запись и талоны"],
+)
 def create_appointment(data: AppointmentCreate, db: Session = Depends(get_db)):
     if db.get(Patient, data.patient_id) is None:
         raise HTTPException(404, "Пациент не найден")
@@ -342,7 +383,13 @@ def create_appointment(data: AppointmentCreate, db: Session = Depends(get_db)):
 # --------------------------------------------------------------------------- #
 
 
-@router.post("/tickets", response_model=TicketOut, status_code=201)
+@router.post(
+    "/tickets",
+    response_model=TicketOut,
+    status_code=201,
+    summary="Выдать талон живой очереди",
+    tags=["Регистратура · Запись и талоны"],
+)
 def create_ticket(data: TicketCreate, db: Session = Depends(get_db)):
     """Выдать талон: номер следующий за день, уникальность гарантирует БД."""
     if db.get(Patient, data.patient_id) is None:
@@ -405,10 +452,15 @@ def create_ticket(data: TicketCreate, db: Session = Depends(get_db)):
 # --------------------------------------------------------------------------- #
 
 
-@router.get("/referrals", response_model=list[ReferralOut])
+@router.get(
+    "/referrals",
+    response_model=list[ReferralOut],
+    summary="Список направлений",
+    tags=["Регистратура · Направления и перезвоны"],
+)
 def list_referrals(
-    status: ReferralStatus = ReferralStatus.active,
-    patient_id: int | None = None,
+    status: ReferralStatus = Query(ReferralStatus.active, description="Статус; по умолчанию действующие"),
+    patient_id: int | None = Query(None, description="Фильтр по пациенту"),
     db: Session = Depends(get_db),
 ):
     stmt = select(Referral).where(Referral.status == status).order_by(Referral.created_at.desc())
@@ -417,7 +469,12 @@ def list_referrals(
     return db.scalars(stmt.limit(200)).all()
 
 
-@router.patch("/referrals/{referral_id}", response_model=ReferralOut)
+@router.patch(
+    "/referrals/{referral_id}",
+    response_model=ReferralOut,
+    summary="Изменить статус направления",
+    tags=["Регистратура · Направления и перезвоны"],
+)
 def update_referral(referral_id: int, data: ReferralStatusIn, db: Session = Depends(get_db)):
     referral = db.get(Referral, referral_id)
     if referral is None:
@@ -433,9 +490,14 @@ def update_referral(referral_id: int, data: ReferralStatusIn, db: Session = Depe
 # --------------------------------------------------------------------------- #
 
 
-@router.get("/callbacks", response_model=list[CallbackOut])
+@router.get(
+    "/callbacks",
+    response_model=list[CallbackOut],
+    summary="Список заявок на перезвон",
+    tags=["Регистратура · Направления и перезвоны"],
+)
 def list_callbacks(
-    status: CallbackStatus | None = None,
+    status: CallbackStatus | None = Query(None, description="Фильтр по статусу; без параметра — все (свежие 200)"),
     db: Session = Depends(get_db),
 ):
     stmt = select(CallbackRequest).order_by(CallbackRequest.created_at.desc())
@@ -445,7 +507,12 @@ def list_callbacks(
     return list(reversed(db.scalars(stmt.limit(200)).all()))
 
 
-@router.patch("/callbacks/{callback_id}", response_model=CallbackOut)
+@router.patch(
+    "/callbacks/{callback_id}",
+    response_model=CallbackOut,
+    summary="Изменить статус заявки на перезвон",
+    tags=["Регистратура · Направления и перезвоны"],
+)
 def update_callback(callback_id: int, data: CallbackStatusIn, db: Session = Depends(get_db)):
     """Взять заявку в работу / закрыть после перезвона."""
     callback = db.get(CallbackRequest, callback_id)

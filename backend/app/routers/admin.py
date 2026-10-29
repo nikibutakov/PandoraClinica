@@ -58,12 +58,23 @@ router = APIRouter(dependencies=[Depends(require_role(UserRole.admin))])
 # --------------------------------------------------------------------------- #
 
 
-@router.get("/users", response_model=list[UserOut])
+@router.get(
+    "/users",
+    response_model=list[UserOut],
+    summary="Список сотрудников",
+    tags=["Админ · Персонал"],
+)
 def list_users(db: Session = Depends(get_db)):
     return db.scalars(select(AppUser).order_by(AppUser.id)).all()
 
 
-@router.post("/users", response_model=UserOut, status_code=201)
+@router.post(
+    "/users",
+    response_model=UserOut,
+    status_code=201,
+    summary="Создать учётку регистратора или админа",
+    tags=["Админ · Персонал"],
+)
 def create_user(data: UserCreate, db: Session = Depends(get_db)):
     if data.role == UserRole.doctor:
         raise HTTPException(400, "Врачи нанимаются через POST /api/admin/doctors")
@@ -81,7 +92,12 @@ def create_user(data: UserCreate, db: Session = Depends(get_db)):
     return user
 
 
-@router.patch("/users/{user_id}", response_model=UserOut)
+@router.patch(
+    "/users/{user_id}",
+    response_model=UserOut,
+    summary="Изменить учётку (пароль, ФИО, деактивация)",
+    tags=["Админ · Персонал"],
+)
 def update_user(user_id: int, data: UserUpdate, db: Session = Depends(get_db)):
     user = db.get(AppUser, user_id)
     if user is None:
@@ -108,12 +124,23 @@ def update_user(user_id: int, data: UserUpdate, db: Session = Depends(get_db)):
 # --------------------------------------------------------------------------- #
 
 
-@router.get("/specializations", response_model=list[SpecializationOut])
+@router.get(
+    "/specializations",
+    response_model=list[SpecializationOut],
+    summary="Список специальностей",
+    tags=["Админ · Справочники"],
+)
 def list_specializations(db: Session = Depends(get_db)):
     return db.scalars(select(Specialization).order_by(Specialization.name)).all()
 
 
-@router.post("/specializations", response_model=SpecializationOut, status_code=201)
+@router.post(
+    "/specializations",
+    response_model=SpecializationOut,
+    status_code=201,
+    summary="Добавить специальность",
+    tags=["Админ · Справочники"],
+)
 def create_specialization(data: SpecializationCreate, db: Session = Depends(get_db)):
     if db.scalar(select(Specialization).where(Specialization.name == data.name)):
         raise HTTPException(409, "Такая специальность уже есть")
@@ -138,7 +165,12 @@ def _room_out(room: Room, spec: Specialization | None) -> RoomOut:
     )
 
 
-@router.get("/rooms", response_model=list[RoomOut])
+@router.get(
+    "/rooms",
+    response_model=list[RoomOut],
+    summary="Список кабинетов",
+    tags=["Админ · Справочники"],
+)
 def list_rooms(db: Session = Depends(get_db)):
     rows = db.execute(
         select(Room, Specialization)
@@ -148,7 +180,13 @@ def list_rooms(db: Session = Depends(get_db)):
     return [_room_out(room, spec) for room, spec in rows]
 
 
-@router.post("/rooms", response_model=RoomOut, status_code=201)
+@router.post(
+    "/rooms",
+    response_model=RoomOut,
+    status_code=201,
+    summary="Добавить кабинет",
+    tags=["Админ · Справочники"],
+)
 def create_room(data: RoomCreate, db: Session = Depends(get_db)):
     if db.scalar(select(Room).where(Room.number == data.number)):
         raise HTTPException(409, "Кабинет с таким номером уже есть")
@@ -161,7 +199,12 @@ def create_room(data: RoomCreate, db: Session = Depends(get_db)):
     return _room_out(room, db.get(Specialization, room.specialization_id) if room.specialization_id else None)
 
 
-@router.patch("/rooms/{room_id}", response_model=RoomOut)
+@router.patch(
+    "/rooms/{room_id}",
+    response_model=RoomOut,
+    summary="Изменить кабинет",
+    tags=["Админ · Справочники"],
+)
 def update_room(room_id: int, data: RoomUpdate, db: Session = Depends(get_db)):
     room = db.get(Room, room_id)
     if room is None:
@@ -198,7 +241,12 @@ def _doctor_out(db: Session, doctor: Doctor, contract: Contract | None) -> Docto
     )
 
 
-@router.get("/doctors", response_model=list[DoctorOut])
+@router.get(
+    "/doctors",
+    response_model=list[DoctorOut],
+    summary="Список врачей с договорами",
+    tags=["Админ · Врачи и график"],
+)
 def list_doctors(db: Session = Depends(get_db)):
     doctors = db.scalars(select(Doctor).order_by(Doctor.id)).all()
     contracts: dict[int, Contract] = {}
@@ -207,7 +255,13 @@ def list_doctors(db: Session = Depends(get_db)):
     return [_doctor_out(db, doctor, contracts.get(doctor.id)) for doctor in doctors]
 
 
-@router.post("/doctors", response_model=DoctorOut, status_code=201)
+@router.post(
+    "/doctors",
+    response_model=DoctorOut,
+    status_code=201,
+    summary="Нанять врача: учётка + профиль + договор",
+    tags=["Админ · Врачи и график"],
+)
 def hire_doctor(data: DoctorHireIn, db: Session = Depends(get_db)):
     """Устройство на работу: учётка + врач + договор одной транзакцией."""
     if db.get(Specialization, data.specialization_id) is None:
@@ -244,7 +298,12 @@ def hire_doctor(data: DoctorHireIn, db: Session = Depends(get_db)):
     return _doctor_out(db, doctor, contract)
 
 
-@router.patch("/doctors/{doctor_id}", response_model=DoctorOut)
+@router.patch(
+    "/doctors/{doctor_id}",
+    response_model=DoctorOut,
+    summary="Изменить врача (специальность, деактивация)",
+    tags=["Админ · Врачи и график"],
+)
 def update_doctor(doctor_id: int, data: DoctorUpdate, db: Session = Depends(get_db)):
     doctor = db.get(Doctor, doctor_id)
     if doctor is None:
@@ -263,7 +322,12 @@ def update_doctor(doctor_id: int, data: DoctorUpdate, db: Session = Depends(get_
     return _doctor_out(db, doctor, latest)
 
 
-@router.get("/doctors/{doctor_id}/schedule", response_model=list[ScheduleTemplateOut])
+@router.get(
+    "/doctors/{doctor_id}/schedule",
+    response_model=list[ScheduleTemplateOut],
+    summary="Посмотреть недельный график врача",
+    tags=["Админ · Врачи и график"],
+)
 def get_schedule(doctor_id: int, db: Session = Depends(get_db)):
     if db.get(Doctor, doctor_id) is None:
         raise HTTPException(404, "Врач не найден")
@@ -274,7 +338,12 @@ def get_schedule(doctor_id: int, db: Session = Depends(get_db)):
     ).all()
 
 
-@router.put("/doctors/{doctor_id}/schedule", response_model=list[ScheduleTemplateOut])
+@router.put(
+    "/doctors/{doctor_id}/schedule",
+    response_model=list[ScheduleTemplateOut],
+    summary="Полностью заменить график врача",
+    tags=["Админ · Врачи и график"],
+)
 def put_schedule(doctor_id: int, data: ScheduleIn, db: Session = Depends(get_db)):
     """Полная замена шаблонов графика врача."""
     if db.get(Doctor, doctor_id) is None:
@@ -307,8 +376,16 @@ def put_schedule(doctor_id: int, data: ScheduleIn, db: Session = Depends(get_db)
 # --------------------------------------------------------------------------- #
 
 
-@router.post("/slots/generate")
-def generate_slots(date_from: date, date_to: date, db: Session = Depends(get_db)):
+@router.post(
+    "/slots/generate",
+    summary="Сгенерировать слоты из шаблонов графика",
+    tags=["Админ · Слоты"],
+)
+def generate_slots(
+    date_from: date = Query(description="Дата от, включительно"),
+    date_to: date = Query(description="Дата до, включительно"),
+    db: Session = Depends(get_db),
+):
     """Генерация слотов по активным шаблонам. Идемпотентно: существующие пропускаются."""
     if date_to < date_from:
         raise HTTPException(400, "date_to раньше date_from")
@@ -357,11 +434,16 @@ def generate_slots(date_from: date, date_to: date, db: Session = Depends(get_db)
     return {"created": created, "period": f"{date_from}..{date_to}"}
 
 
-@router.get("/slots", response_model=list[SlotOut])
+@router.get(
+    "/slots",
+    response_model=list[SlotOut],
+    summary="Слоты за дату (контроль)",
+    tags=["Админ · Слоты"],
+)
 def list_slots(
-    date: date,
-    doctor_id: int | None = None,
-    specialization_id: int | None = None,
+    date: date = Query(description="Какой день показать"),
+    doctor_id: int | None = Query(None, description="Фильтр по врачу"),
+    specialization_id: int | None = Query(None, description="Фильтр по специальности"),
     db: Session = Depends(get_db),
 ):
     lo, hi = day_bounds(date)
@@ -397,7 +479,12 @@ def list_slots(
 # --------------------------------------------------------------------------- #
 
 
-@router.get("/reports/daily", response_model=DailyExportOut)
+@router.get(
+    "/reports/daily",
+    response_model=DailyExportOut,
+    summary="Выгрузка приёмов за день: РФ и иностранцы раздельно",
+    tags=["Админ · Выгрузки"],
+)
 def daily_export(
     date_: date | None = Query(None, alias="date", description="по умолчанию сегодня"),
     db: Session = Depends(get_db),

@@ -2,7 +2,7 @@
 
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -21,7 +21,13 @@ from app.utils import clinic_now, clinic_today, day_bounds
 router = APIRouter()
 
 
-@router.post("/callbacks", response_model=CallbackOut, status_code=201)
+@router.post(
+    "/callbacks",
+    response_model=CallbackOut,
+    status_code=201,
+    summary="Оставить заявку на перезвон",
+    tags=["Внешний сайт"],
+)
 def create_callback(data: CallbackCreate, db: Session = Depends(get_db)):
     """Заявка на перезвон с внешнего сайта."""
     callback = CallbackRequest(
@@ -36,17 +42,27 @@ def create_callback(data: CallbackCreate, db: Session = Depends(get_db)):
     return callback
 
 
-@router.get("/specializations", response_model=list[SpecializationOut])
+@router.get(
+    "/specializations",
+    response_model=list[SpecializationOut],
+    summary="Список специальностей",
+    tags=["Внешний сайт"],
+)
 def list_specializations(db: Session = Depends(get_db)):
     """Справочник специальностей для графика приёмов на внешнем сайте."""
     return db.scalars(select(Specialization).order_by(Specialization.name)).all()
 
 
-@router.get("/schedule", response_model=list[PublicSlotOut])
+@router.get(
+    "/schedule",
+    response_model=list[PublicSlotOut],
+    summary="Свободные слоты по специальности",
+    tags=["Внешний сайт"],
+)
 def free_slots(
-    specialization_id: int,
-    date_from: date | None = None,
-    date_to: date | None = None,
+    specialization_id: int = Query(description="ID специальности — из списка специальностей"),
+    date_from: date | None = Query(None, description="Дата от, включительно; по умолчанию сегодня"),
+    date_to: date | None = Query(None, description="Дата до, включительно; по умолчанию равна date_from"),
     db: Session = Depends(get_db),
 ):
     """Свободные слоты по специальности — график приёмов, врачи не раскрываются."""

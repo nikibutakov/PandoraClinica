@@ -46,7 +46,7 @@ class UserCreate(BaseModel):
     full_name: str = Field(min_length=2, max_length=200)
     login: str = Field(min_length=3, max_length=100)
     password: str = Field(min_length=4, max_length=72)
-    role: UserRole  # admin | registrar; врачи нанимаются через /api/admin/doctors
+    role: UserRole = Field(description="admin или registrar; врачи нанимаются через «Админ · Врачи и график»")
 
 
 class UserUpdate(BaseModel):
@@ -73,8 +73,9 @@ class SpecializationOut(BaseModel):
 
 
 class RoomCreate(BaseModel):
-    number: str = Field(min_length=1, max_length=10)
-    specialization_id: int | None = None  # NULL — универсальный кабинет
+    number: str = Field(min_length=1, max_length=10, description="Номер кабинета, например «204»")
+    specialization_id: int | None = Field(
+        default=None, description="Профиль кабинета (например, УЗИ); не указан — универсальный")
 
 
 class RoomUpdate(BaseModel):
@@ -102,10 +103,10 @@ class DoctorHireIn(BaseModel):
     password: str = Field(min_length=4, max_length=72)
     specialization_id: int
 
-    contract_number: str = Field(min_length=1, max_length=50)
-    signed_at: date | None = None  # по умолчанию сегодня
-    valid_from: date
-    valid_to: date | None = None  # NULL — бессрочный
+    contract_number: str = Field(min_length=1, max_length=50, description="Номер договора; уникален")
+    signed_at: date | None = Field(default=None, description="Дата подписания; по умолчанию сегодня")
+    valid_from: date = Field(description="Договор действует с")
+    valid_to: date | None = Field(default=None, description="Действует до; не указан — бессрочный")
 
 
 class DoctorUpdate(BaseModel):
@@ -158,7 +159,7 @@ class ScheduleTemplateOut(BaseModel):
 class ScheduleIn(BaseModel):
     """PUT полностью заменяет набор шаблонов врача."""
 
-    items: list[ScheduleTemplateIn]
+    items: list[ScheduleTemplateIn] = Field(description="Новый полный набор шаблонов; пустой список очистит график")
 
 
 class SlotOut(BaseModel):
@@ -177,9 +178,9 @@ class SlotOut(BaseModel):
 
 
 class WorkdayCreate(BaseModel):
-    doctor_id: int
-    room_id: int
-    work_date: date | None = None  # по умолчанию сегодня по клинике
+    doctor_id: int = Field(description="ID врача — из «Список врачей с договорами»")
+    room_id: int = Field(description="ID кабинета; профиль должен подходить специальности врача")
+    work_date: date | None = Field(default=None, description="По умолчанию сегодня по клинике")
 
 
 class WorkdayOut(BaseModel):
@@ -219,11 +220,15 @@ class MorningOut(BaseModel):
 
 
 class PatientCreate(BaseModel):
-    snils: str | None = Field(default=None, pattern=r"^\d{11}$")
-    full_name: str | None = Field(default=None, max_length=200)
+    snils: str | None = Field(
+        default=None, pattern=r"^\d{11}$", description="11 цифр без разделителей; не указан — приём без СНИЛС")
+    full_name: str | None = Field(
+        default=None, max_length=200, description="Не указан — личность не установлена (приём с скорой)")
     birth_date: date | None = None
-    citizenship: str = Field(default="RUS", min_length=3, max_length=3)
-    insurance_policy: str | None = Field(default=None, max_length=50)
+    citizenship: str = Field(
+        default="RUS", min_length=3, max_length=3, description="Гражданство, ISO 3166-1 alpha-3 (RUS, UZB…)")
+    insurance_policy: str | None = Field(
+        default=None, max_length=50, description="Сторонняя страховка — обязательна для не-РФ без СНИЛС")
     insurance_company: str | None = Field(default=None, max_length=200)
     phone: str | None = Field(default=None, max_length=20)
 
@@ -253,9 +258,10 @@ class PatientOut(BaseModel):
 
 
 class AppointmentCreate(BaseModel):
-    slot_id: int
+    slot_id: int = Field(description="ID свободного слота — из «Свободные слоты по специальности»")
     patient_id: int
-    referral_id: int | None = None  # запись по направлению — закроет его
+    referral_id: int | None = Field(
+        default=None, description="Запись по направлению — после создания направление закроется")
 
 
 class AppointmentOut(BaseModel):
@@ -270,8 +276,10 @@ class AppointmentOut(BaseModel):
 
 class TicketCreate(BaseModel):
     patient_id: int
-    doctor_workday_id: int | None = None
-    appointment_id: int | None = None  # по нему определится врач/день, если кабинет не указан
+    doctor_workday_id: int | None = Field(
+        default=None, description="К какому врачу очередь; без него врач берётся из записи")
+    appointment_id: int | None = Field(
+        default=None, description="Запись, по которой пациент пришёл: врач и день возьмутся из слота")
 
 
 class TicketOut(BaseModel):
@@ -309,9 +317,9 @@ class ReferralStatusIn(BaseModel):
 
 
 class CallbackCreate(BaseModel):
-    phone: str
-    full_name: str | None = Field(default=None, max_length=200)
-    comment: str | None = Field(default=None, max_length=1000)
+    phone: str = Field(description="Телефон для перезвона: минимум 7 цифр; допустимы +, скобки, пробелы, дефисы")
+    full_name: str | None = Field(default=None, max_length=200, description="Как к вам обращаться")
+    comment: str | None = Field(default=None, max_length=1000, description="Вопрос или пожелание")
 
     @field_validator("phone")
     @classmethod
@@ -363,8 +371,8 @@ class BoardRoom(BaseModel):
     doctor_id: int
     doctor_name: str | None
     specialization_name: str | None
-    current: list[BoardTicket] = []  # вызванные / на приёме
-    waiting_numbers: list[int] = []  # ожидающие, по возрастанию номера
+    current: list[BoardTicket] = Field(default=[], description="Вызванные сейчас / на приёме")
+    waiting_numbers: list[int] = Field(default=[], description="Номера ожидающих, по возрастанию")
 
 
 class BoardOut(BaseModel):
@@ -447,10 +455,12 @@ class QueueItemOut(BaseModel):
 class DiagnosisItem(BaseModel):
     """Готовый диагноз из справочника (diagnosis_id) или новый по коду МКБ-10."""
 
-    diagnosis_id: int | None = None
-    code: str | None = Field(default=None, max_length=10)
-    name: str | None = Field(default=None, max_length=200)
-    is_primary: bool = False
+    diagnosis_id: int | None = Field(default=None, description="ID существующего диагноза из справочника")
+    code: str | None = Field(
+        default=None, max_length=10, description="Код МКБ-10; если такого ещё нет, он создастся")
+    name: str | None = Field(
+        default=None, max_length=200, description="Название для нового кода МКБ-10")
+    is_primary: bool = Field(default=False, description="Основной диагноз; если не указан ни у одного — основным станет первый")
 
 
 class VisitReferralIn(BaseModel):
@@ -461,12 +471,14 @@ class VisitReferralIn(BaseModel):
 
 
 class VisitIn(BaseModel):
-    ticket_id: int
-    complaints: str | None = None
-    anamnesis: str | None = None
-    treatment: str | None = None  # назначения и рекомендации текстом
-    diagnoses: list[DiagnosisItem] = []
-    referral: VisitReferralIn | None = None
+    ticket_id: int = Field(description="Талон закрываемого приёма — из «Моя очередь талонов»")
+    complaints: str | None = Field(default=None, description="Жалобы пациента")
+    anamnesis: str | None = Field(default=None, description="Анамнез")
+    treatment: str | None = Field(
+        default=None, description="Лечение, назначения и рекомендации текстом")
+    diagnoses: list[DiagnosisItem] = Field(default=[], description="Диагнозы по МКБ-10")
+    referral: VisitReferralIn | None = Field(
+        default=None, description="Направление к специальности — создастся сразу по итогам приёма")
 
 
 class VisitOut(BaseModel):

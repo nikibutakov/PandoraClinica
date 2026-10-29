@@ -12,7 +12,7 @@ from app.security import create_access_token, verify_password
 router = APIRouter()
 
 
-@router.post("/login", response_model=TokenOut)
+@router.post("/login", response_model=TokenOut, summary="Войти и получить JWT-токен", tags=["Аутентификация"])
 def login(data: LoginIn, db: Session = Depends(get_db)):
     user = db.scalar(select(AppUser).where(AppUser.login == data.login))
     if user is None or not verify_password(data.password, user.password_hash):
