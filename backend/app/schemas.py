@@ -328,6 +328,15 @@ class CallbackStatusIn(BaseModel):
     status: CallbackStatus
 
 
+class PublicSlotOut(BaseModel):
+    """Слот публичного графика: только специальность и время, без врача."""
+
+    specialization_id: int
+    specialization_name: str
+    starts_at: datetime
+    ends_at: datetime
+
+
 # --------------------------------------------------------------------------- #
 # Врач: день, очередь, приём
 # --------------------------------------------------------------------------- #
