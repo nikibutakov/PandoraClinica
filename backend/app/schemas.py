@@ -364,6 +364,48 @@ class BoardOut(BaseModel):
 
 
 # --------------------------------------------------------------------------- #
+# Вечерняя выгрузка приёмов (раздельно РФ / не-РФ)
+# --------------------------------------------------------------------------- #
+
+
+class ExportPatient(BaseModel):
+    id: int
+    snils: str | None
+    full_name: str | None
+    citizenship: str
+    insurance_policy: str | None
+    insurance_company: str | None
+
+
+class ExportDiagnosis(BaseModel):
+    code: str
+    name: str
+    is_primary: bool
+
+
+class ExportVisit(BaseModel):
+    medical_record_id: int
+    ticket_id: int
+    ticket_number: int
+    patient: ExportPatient
+    doctor_name: str | None
+    specialization_name: str | None
+    diagnoses: list[ExportDiagnosis] = []
+    created_at: datetime
+
+
+class ExportGroup(BaseModel):
+    total: int
+    visits: list[ExportVisit] = []
+
+
+class DailyExportOut(BaseModel):
+    date: date
+    ru: ExportGroup = Field(description="Граждане РФ (citizenship == RUS)")
+    foreign: ExportGroup = Field(description="Иностранные граждане (остальные)")
+
+
+# --------------------------------------------------------------------------- #
 # Врач: день, очередь, приём
 # --------------------------------------------------------------------------- #
 

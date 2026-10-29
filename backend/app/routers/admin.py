@@ -2,7 +2,7 @@
 
 from datetime import date, datetime, time, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
@@ -12,19 +12,29 @@ from app.models import (
     AppUser,
     Contract,
     ContractStatus,
+    Diagnosis,
     Doctor,
+    MedicalRecord,
+    MedicalRecordDiagnosis,
+    Patient,
     Room,
     ScheduleTemplate,
     Slot,
     SlotStatus,
     Specialization,
+    Ticket,
     UserRole,
 )
 from app.schemas import (
     ContractOut,
+    DailyExportOut,
     DoctorHireIn,
     DoctorOut,
     DoctorUpdate,
+    ExportDiagnosis,
+    ExportGroup,
+    ExportPatient,
+    ExportVisit,
     RoomCreate,
     RoomOut,
     RoomUpdate,
@@ -38,7 +48,7 @@ from app.schemas import (
     UserUpdate,
 )
 from app.security import hash_password, require_role
-from app.utils import clinic_now, clinic_tz, day_bounds
+from app.utils import clinic_now, clinic_today, clinic_tz, day_bounds
 
 router = APIRouter(dependencies=[Depends(require_role(UserRole.admin))])
 
@@ -380,3 +390,67 @@ def list_slots(
         )
         for slot, doctor, user in rows
     ]
+
+
+# --------------------------------------------------------------------------- #
+# Вечерняя выгрузка
+# --------------------------------------------------------------------------- #
+
+
+@router.get("/reports/daily", response_model=DailyExportOut)
+def daily_export(
+    date_: date | None = Query(None, alias="date", description="по умолчанию сегодня"),
+    db: Session = Depends(get_db),
+):
+    """Выгрузка приёмов за день, раздельно по гражданам РФ и иностранным гражданам."""
+    d = date_ or clinic_today()
+
+    rows = db.execute(
+        select(MedicalRecord, Ticket, Patient, Doctor, AppUser, Specialization)
+        .join(Ticket, Ticket.id == MedicalRecord.ticket_id)
+        .join(Patient, Patient.id == MedicalRecord.patient_id)
+        .join(Doctor, Doctor.id == MedicalRecord.doctor_id)
+        .join(AppUser, AppUser.id == Doctor.user_id, isouter=True)
+        .join(Specialization, Specialization.id == Doctor.specialization_id, isouter=True)
+        .where(Ticket.ticket_date == d)
+        .order_by(Ticket.number)
+    ).all()
+
+    diagnoses_by_record: dict[int, list[ExportDiagnosis]] = {}
+    record_ids = [record.id for record, *_ in rows]
+    if record_ids:
+        diag_rows = db.execute(
+            select(MedicalRecordDiagnosis, Diagnosis)
+            .join(Diagnosis, Diagnosis.id == MedicalRecordDiagnosis.diagnosis_id)
+            .where(MedicalRecordDiagnosis.medical_record_id.in_(record_ids))
+            .order_by(MedicalRecordDiagnosis.is_primary.desc(), Diagnosis.code)
+        ).all()
+        for link, diagnosis in diag_rows:
+            diagnoses_by_record.setdefault(link.medical_record_id, []).append(
+                ExportDiagnosis(code=diagnosis.code, name=diagnosis.name, is_primary=link.is_primary)
+            )
+
+    ru, foreign = ExportGroup(total=0), ExportGroup(total=0)
+    for record, ticket, patient, doctor, user, spec in rows:
+        visit = ExportVisit(
+            medical_record_id=record.id,
+            ticket_id=ticket.id,
+            ticket_number=ticket.number,
+            patient=ExportPatient(
+                id=patient.id,
+                snils=patient.snils,
+                full_name=patient.full_name,
+                citizenship=patient.citizenship,
+                insurance_policy=patient.insurance_policy,
+                insurance_company=patient.insurance_company,
+            ),
+            doctor_name=user.full_name if user else None,
+            specialization_name=spec.name if spec else None,
+            diagnoses=diagnoses_by_record.get(record.id, []),
+            created_at=record.created_at,
+        )
+        group = ru if patient.citizenship == "RUS" else foreign
+        group.visits.append(visit)
+        group.total += 1
+
+    return DailyExportOut(date=d, ru=ru, foreign=foreign)
