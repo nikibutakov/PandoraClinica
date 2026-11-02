@@ -1,0 +1,25 @@
+{
+  "name": "pandora-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "shared",
+    "staff",
+    "public"
+  ],
+  "scripts": {
+    "dev": "concurrently -n staff,public -c blue,green \"npm:dev:staff\" \"npm:dev:public\"",
+    "dev:staff": "npm run dev -w @pandora/staff",
+    "dev:public": "npm run dev -w @pandora/public",
+    "build": "npm run build -w @pandora/staff && npm run build -w @pandora/public",
+    "preview": "concurrently -n staff,public \"npm:preview:staff\" \"npm:preview:public\"",
+    "preview:staff": "npm run preview -w @pandora/staff",
+    "preview:public": "npm run preview -w @pandora/public",
+    "gen:api": "openapi-typescript http://localhost:8000/openapi.json -o shared/src/api/schema.d.ts"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6",
+    "openapi-typescript": "^7.13.0"
+  }
+}
