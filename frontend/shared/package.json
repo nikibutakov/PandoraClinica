@@ -7,6 +7,10 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "openapi-fetch": "^0.17.0"
+    "openapi-fetch": "^0.17.0",
+    "react-router-dom": "^7.1.0"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
   }
 }
