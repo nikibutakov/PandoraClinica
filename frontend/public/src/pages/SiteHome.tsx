@@ -9,8 +9,8 @@ export default function SiteHome() {
       <Typography.Title level={2}>Поликлиника «Пандора»</Typography.Title>
       <Card>
         <Typography.Paragraph>
-          Внешний сайт клиники — каркас. Здесь появятся приёмные часы, график приёмов по
-          специальностям и форма «перезвоните мне» (экран E13 плана).
+          Внешний сайт клиники — каркас. Здесь появятся приёмные часы, график
+          приёмов по специальностям и форма «перезвоните мне» (экран E13 плана).
         </Typography.Paragraph>
         <Typography.Paragraph>
           <Link to="/board">Табло очереди для холла →</Link>

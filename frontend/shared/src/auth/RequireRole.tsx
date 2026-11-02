@@ -6,7 +6,13 @@ import type { ReactNode } from "react";
 import { useAuth } from "./context";
 import type { UserRole } from "./user";
 
-export function RequireRole({ roles, children }: { roles?: UserRole[]; children: ReactNode }) {
+export function RequireRole({
+  roles,
+  children,
+}: {
+  roles?: UserRole[];
+  children: ReactNode;
+}) {
   const user = useAuth();
   const location = useLocation();
 

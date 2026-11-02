@@ -26,7 +26,8 @@ export default function Login() {
     setError("");
     try {
       await login(values.login, values.password);
-      const from = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname;
+      const from = (location.state as { from?: { pathname?: string } } | null)
+        ?.from?.pathname;
       navigate(from && from !== "/login" ? from : "/", { replace: true });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Не удалось войти");
@@ -36,16 +37,34 @@ export default function Login() {
   };
 
   return (
-    <Flex align="center" justify="center" style={{ minHeight: "100vh", background: "#f5f5f5" }}>
+    <Flex
+      align="center"
+      justify="center"
+      style={{ minHeight: "100vh", background: "#f5f5f5" }}
+    >
       <Card style={{ width: 380 }}>
-        <Typography.Title level={3} style={{ textAlign: "center", marginTop: 0 }}>
+        <Typography.Title
+          level={3}
+          style={{ textAlign: "center", marginTop: 0 }}
+        >
           Пандора · Клиника
         </Typography.Title>
         <Typography.Paragraph type="secondary" style={{ textAlign: "center" }}>
           Вход для персонала
         </Typography.Paragraph>
-        {error && <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />}
-        <Form<LoginForm> layout="vertical" onFinish={onFinish} requiredMark={false}>
+        {error && (
+          <Alert
+            type="error"
+            message={error}
+            showIcon
+            style={{ marginBottom: 16 }}
+          />
+        )}
+        <Form<LoginForm>
+          layout="vertical"
+          onFinish={onFinish}
+          requiredMark={false}
+        >
           <Form.Item
             name="login"
             label="Логин"

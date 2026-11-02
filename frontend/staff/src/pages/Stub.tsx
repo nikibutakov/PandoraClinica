@@ -9,7 +9,8 @@ export default function Stub({ title, plan }: { title: string; plan: string }) {
         {title}
       </Typography.Title>
       <Typography.Paragraph type="secondary">
-        Экран в разработке ({plan}). Здесь будут живые данные из API поликлиники.
+        Экран в разработке ({plan}). Здесь будут живые данные из API
+        поликлиники.
       </Typography.Paragraph>
     </Card>
   );

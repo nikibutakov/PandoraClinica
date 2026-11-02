@@ -1,6 +1,12 @@
 /** Auth-контекст: логин через /api/auth/login, токен в localStorage, выход. */
 
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from "react";
 import type { ReactNode } from "react";
 
 import { api, TOKEN_KEY } from "../api/client";
@@ -17,7 +23,9 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthUser | null>(null);
 
-const AuthActionsContext = createContext<Pick<AuthContextValue, "login" | "logout">>({
+const AuthActionsContext = createContext<
+  Pick<AuthContextValue, "login" | "logout">
+>({
   login: async () => undefined,
   logout: () => undefined,
 });
@@ -40,7 +48,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       body: { login: loginName, password },
     });
     if (data) {
-      const next: AuthUser = { token: data.access_token, role: data.role, fullName: data.full_name };
+      const next: AuthUser = {
+        token: data.access_token,
+        role: data.role,
+        fullName: data.full_name,
+      };
       persist(next);
       setUser(next);
       return;
@@ -57,7 +69,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider value={user}>
-      <AuthActionsContext.Provider value={actions}>{children}</AuthActionsContext.Provider>
+      <AuthActionsContext.Provider value={actions}>
+        {children}
+      </AuthActionsContext.Provider>
     </AuthContext.Provider>
   );
 }

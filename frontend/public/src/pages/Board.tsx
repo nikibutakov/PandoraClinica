@@ -17,7 +17,9 @@ export default function Board() {
         <Typography.Title style={{ color: "#fff", fontSize: 64, margin: 0 }}>
           ТАБЛО ОЧЕРЕДИ
         </Typography.Title>
-        <Typography.Text style={{ color: "rgba(255,255,255,0.65)", fontSize: 24 }}>
+        <Typography.Text
+          style={{ color: "rgba(255,255,255,0.65)", fontSize: 24 }}
+        >
           Кабинеты, принимающие врачи и вызываемые номера появятся здесь (E7)
         </Typography.Text>
         <Link to="/" style={{ color: "rgba(255,255,255,0.45)", fontSize: 16 }}>
