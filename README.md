@@ -8,8 +8,9 @@
 
 - **БД** — PostgreSQL 17 (docker compose для разработки)
 - **Бекенд** — FastAPI, один сервис: SQLAlchemy 2.x, Alembic, JWT + роли, pytest
-- **Фронтенд** — React, два приложения (внутреннее для персонала и внешнее для
-  пациентов); пока не начаты
+- **Фронтенд** — Vite + React + TypeScript + Ant Design, npm workspaces: `staff`
+  (внутреннее приложение, :5173) и `public` (внешний сайт и табло, :5174);
+  типизированный API-клиент генерируется из OpenAPI
 
 ## Структура
 
@@ -22,10 +23,14 @@ backend/
     models.py      # SQLAlchemy-модели (16 таблиц)
     schemas.py     # Pydantic-схемы запросов и ответов
     security.py    # bcrypt-пароли, JWT, проверка ролей
-    seed.py        # создание первого администратора
+    seed.py        # первый админ; --demo — демо-данные для показа
     routers/       # auth, public, board, registrar, doctor, admin
   migrations/      # Alembic-миграции
   tests/           # pytest: сквозной цикл пациента + все блоки API
+frontend/          # npm workspaces
+  shared/          # @pandora/shared: API-клиент, auth-обвязка, типы из OpenAPI
+  staff/           # @pandora/staff: приложение персонала (:5173)
+  public/          # @pandora/public: внешний сайт + табло /board (:5174)
 docker-compose.yml # PostgreSQL для локальной разработки
 ```
 
@@ -57,6 +62,27 @@ uvicorn app.main:app --reload   # http://localhost:8000
 Swagger UI — **http://localhost:8000/docs** (редирект с корня). Войдите через
 `POST /api/auth/login`, вставьте токен в кнопку **Authorize** — и все закрытые
 блоки можно тестировать прямо из браузера.
+
+## Фронтенд
+
+```bash
+cd frontend
+npm install          # один раз: ставит зависимости всех пакетов монорепо
+npm run dev          # staff на :5173 и public на :5174 (прокси /api -> :8000)
+npm run build        # tsc --noEmit + vite build, оба приложения
+npm run lint         # ESLint по всему монорепо
+npm run gen:api      # перегенерация типов из OpenAPI запущенного бэкенда
+```
+
+- `staff` (:5173) — внутреннее приложение: логин, меню по роли (регистратор /
+  врач / админ), заглушки всех экранов из плана.
+- `public` (:5174) — внешний сайт и тёмное табло `/board` без авторизации.
+- `shared` — типизированный клиент (openapi-fetch) поверх сгенерированных
+  типов: `api.GET("/api/...")` с автодополнением; 401 → авто-разлогин.
+- Типы (`shared/src/api/schema.d.ts`) закоммичены: CI и сборка не требуют
+  запущенного бэкенда. После изменения API: поднять бэк → `npm run gen:api` →
+  TypeScript подсветит сломанные места.
+- На Windows нужен `tzdata` в окружении бэкенда (уже в requirements-dev).
 
 ## Тесты
 
