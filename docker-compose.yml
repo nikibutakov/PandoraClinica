@@ -1,0 +1,22 @@
+# Локальная база разработки.
+# Подключение (DBeaver): localhost:5432, база pandora_clinic, пользователь pandora / pandora.
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: pandora-db
+    environment:
+      POSTGRES_USER: pandora
+      POSTGRES_PASSWORD: pandora
+      POSTGRES_DB: pandora_clinic
+    ports:
+      - "5432:5432"
+    volumes:
+      - pandora_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pandora -d pandora_clinic"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pandora_pgdata:
