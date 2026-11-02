@@ -43,7 +43,14 @@ export default function StaffLayout() {
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Layout.Sider theme="dark" width={220}>
-        <div style={{ color: "rgba(255,255,255,0.85)", padding: 16, fontWeight: 600, fontSize: 16 }}>
+        <div
+          style={{
+            color: "rgba(255,255,255,0.85)",
+            padding: 16,
+            fontWeight: 600,
+            fontSize: 16,
+          }}
+        >
           Пандора · Клиника
         </div>
         <Menu
@@ -58,7 +65,9 @@ export default function StaffLayout() {
         <Layout.Header style={{ background: "#fff", paddingInline: 24 }}>
           <Space size="large" style={{ float: "right" }}>
             <Typography.Text strong>{user.fullName}</Typography.Text>
-            <Typography.Text type="secondary">{ROLE_LABEL[user.role]}</Typography.Text>
+            <Typography.Text type="secondary">
+              {ROLE_LABEL[user.role]}
+            </Typography.Text>
             <Button
               onClick={() => {
                 logout();

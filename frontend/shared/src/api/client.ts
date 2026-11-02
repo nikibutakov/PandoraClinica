@@ -24,7 +24,9 @@ api.use({
   },
   onResponse({ request, response }) {
     // 401 от логина — это «неверный пароль», а не истёкшая сессия: там не разлогиниваем
-    const isLogin = new URL(request.url, window.location.origin).pathname === "/api/auth/login";
+    const isLogin =
+      new URL(request.url, window.location.origin).pathname ===
+      "/api/auth/login";
     if (response.status === 401 && !isLogin) {
       localStorage.removeItem(TOKEN_KEY);
       onUnauthorized?.();

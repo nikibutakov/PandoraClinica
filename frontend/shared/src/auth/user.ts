@@ -51,7 +51,8 @@ export function restoreUser(): AuthUser | null {
     const user = JSON.parse(raw) as AuthUser;
     const payload = parseJwt(token);
     if (!user.token || user.token !== token || !payload) return null;
-    if (payload.exp !== undefined && payload.exp * 1000 < Date.now()) return null;
+    if (payload.exp !== undefined && payload.exp * 1000 < Date.now())
+      return null;
     return user;
   } catch {
     return null;

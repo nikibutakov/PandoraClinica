@@ -17,7 +17,11 @@ export function formatApiError(body: unknown, status: number): string {
   if (typeof detail === "string") return detail;
   if (Array.isArray(detail)) {
     const messages = detail
-      .map((item) => (typeof (item as ValidationItem)?.msg === "string" ? (item as ValidationItem).msg : null))
+      .map((item) =>
+        typeof (item as ValidationItem)?.msg === "string"
+          ? (item as ValidationItem).msg
+          : null,
+      )
       .filter((msg): msg is string => msg !== null);
     if (messages.length > 0) return messages.join("; ");
   }

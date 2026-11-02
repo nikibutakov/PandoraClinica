@@ -16,10 +16,21 @@
     "preview": "concurrently -n staff,public \"npm:preview:staff\" \"npm:preview:public\"",
     "preview:staff": "npm run preview -w @pandora/staff",
     "preview:public": "npm run preview -w @pandora/public",
-    "gen:api": "openapi-typescript http://localhost:8000/openapi.json -o shared/src/api/schema.d.ts"
+    "gen:api": "openapi-typescript http://localhost:8000/openapi.json -o shared/src/api/schema.d.ts",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
+    "@eslint/js": "10.0.1",
     "concurrently": "^10.0.6",
-    "openapi-typescript": "^7.13.0"
+    "eslint": "10.14.0",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "eslint-plugin-react-refresh": "0.5.7",
+    "globals": "17.14.0",
+    "openapi-typescript": "^7.13.0",
+    "prettier": "3.9.10",
+    "typescript-eslint": "8.72.1"
   }
 }
