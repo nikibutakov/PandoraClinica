@@ -35,3 +35,38 @@ jobs:
       # тесты: скидка на паттерны pytest (фикстуры и распаковка setup_world)
       - name: Pylint (тесты)
         run: pylint backend/tests --disable=redefined-outer-name,unused-variable
+
+  tests:
+    name: Тесты (pytest)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: pandora
+          POSTGRES_PASSWORD: pandora
+          POSTGRES_DB: pandora_clinic
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U pandora"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Установка зависимостей
+        run: pip install -r backend/requirements.txt
+
+      # conftest сам пересоздаёт тестовую базу pandora_clinic_test
+      # и накатывает схему через Base.metadata.create_all — миграции не нужны
+      - name: Pytest
+        run: pytest
+        working-directory: backend
