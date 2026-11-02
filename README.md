@@ -46,6 +46,10 @@ alembic upgrade head
 # 4. Первый администратор; по умолчанию admin/admin — смените пароль после входа
 python -m app.seed              # или: python -m app.seed <логин> <пароль>
 
+# 4а. Демо-данные для показа: врачи, кабинеты, слоты на 14 дней, очередь на табло
+python -m app.seed --demo
+#    регистратор: registrar/registrar; врачи ivanova, sokolov, kim, volkov — пароль doctor
+
 # 5. Сервер разработки
 uvicorn app.main:app --reload   # http://localhost:8000
 ```
