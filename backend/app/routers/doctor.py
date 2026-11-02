@@ -8,9 +8,9 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import (
-    AppUser,
     Appointment,
     AppointmentStatus,
+    AppUser,
     Diagnosis,
     Doctor,
     DoctorWorkday,
@@ -31,8 +31,8 @@ from app.schemas import (
     QueueItemOut,
     ReferralCreate,
     ReferralOut,
-    TodayOut,
     TicketOut,
+    TodayOut,
     VisitIn,
     VisitOut,
 )
@@ -191,7 +191,9 @@ def skip_patient(ticket_id: int, doctor: Doctor = Depends(get_current_doctor), d
     summary="Завершить приём: медзапись, диагнозы, направление",
     tags=["Врач · Приём и направления"],
 )
-def complete_visit(data: VisitIn, doctor: Doctor = Depends(get_current_doctor), db: Session = Depends(get_db)):
+def complete_visit(
+    data: VisitIn, doctor: Doctor = Depends(get_current_doctor), db: Session = Depends(get_db)
+):
     """Завершить приём: запись в медкарте, диагнозы, при необходимости направление."""
     ticket = _ticket_or_403(db, doctor, data.ticket_id)
     if ticket.status not in (TicketStatus.waiting, TicketStatus.called):
@@ -270,7 +272,9 @@ def complete_visit(data: VisitIn, doctor: Doctor = Depends(get_current_doctor), 
     summary="Выдать направление к специальности",
     tags=["Врач · Приём и направления"],
 )
-def create_referral(data: ReferralCreate, doctor: Doctor = Depends(get_current_doctor), db: Session = Depends(get_db)):
+def create_referral(
+    data: ReferralCreate, doctor: Doctor = Depends(get_current_doctor), db: Session = Depends(get_db)
+):
     """Направление к специальности вне приёма (например, по телефону из кабинета)."""
     if db.get(Patient, data.patient_id) is None:
         raise HTTPException(404, "Пациент не найден")

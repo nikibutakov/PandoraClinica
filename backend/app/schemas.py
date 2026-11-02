@@ -159,7 +159,8 @@ class ScheduleTemplateOut(BaseModel):
 class ScheduleIn(BaseModel):
     """PUT полностью заменяет набор шаблонов врача."""
 
-    items: list[ScheduleTemplateIn] = Field(description="Новый полный набор шаблонов; пустой список очистит график")
+    items: list[ScheduleTemplateIn] = Field(
+        description="Новый полный набор шаблонов; пустой список очистит график")
 
 
 class SlotOut(BaseModel):
@@ -221,9 +222,11 @@ class MorningOut(BaseModel):
 
 class PatientCreate(BaseModel):
     snils: str | None = Field(
-        default=None, pattern=r"^\d{11}$", description="11 цифр без разделителей; не указан — приём без СНИЛС")
+        default=None, pattern=r"^\d{11}$",
+        description="11 цифр без разделителей; не указан — приём без СНИЛС")
     full_name: str | None = Field(
-        default=None, max_length=200, description="Не указан — личность не установлена (приём с скорой)")
+        default=None, max_length=200,
+        description="Не указан — личность не установлена (приём с скорой)")
     birth_date: date | None = None
     citizenship: str = Field(
         default="RUS", min_length=3, max_length=3, description="Гражданство, ISO 3166-1 alpha-3 (RUS, UZB…)")
@@ -317,7 +320,8 @@ class ReferralStatusIn(BaseModel):
 
 
 class CallbackCreate(BaseModel):
-    phone: str = Field(description="Телефон для перезвона: минимум 7 цифр; допустимы +, скобки, пробелы, дефисы")
+    phone: str = Field(
+        description="Телефон для перезвона: минимум 7 цифр; допустимы +, скобки, пробелы, дефисы")
     full_name: str | None = Field(default=None, max_length=200, description="Как к вам обращаться")
     comment: str | None = Field(default=None, max_length=1000, description="Вопрос или пожелание")
 
@@ -326,7 +330,8 @@ class CallbackCreate(BaseModel):
     def check_phone(cls, value: str) -> str:
         # цифры, скобки, пробелы, дефисы, ведущий «+»; минимум 7 цифр
         if not re.fullmatch(r"\+?[0-9()\-\s]{7,20}", value) or sum(ch.isdigit() for ch in value) < 7:
-            raise ValueError("Телефон: 7–20 символов (цифры, скобки, пробелы, дефисы, ведущий +), минимум 7 цифр")
+            raise ValueError(
+                "Телефон: 7–20 символов (цифры, скобки, пробелы, дефисы, ведущий +), минимум 7 цифр")
         return value
 
 
@@ -460,7 +465,8 @@ class DiagnosisItem(BaseModel):
         default=None, max_length=10, description="Код МКБ-10; если такого ещё нет, он создастся")
     name: str | None = Field(
         default=None, max_length=200, description="Название для нового кода МКБ-10")
-    is_primary: bool = Field(default=False, description="Основной диагноз; если не указан ни у одного — основным станет первый")
+    is_primary: bool = Field(
+        default=False, description="Основной диагноз; если не указан ни у одного — основным станет первый")
 
 
 class VisitReferralIn(BaseModel):

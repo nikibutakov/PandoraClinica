@@ -53,6 +53,8 @@ def board(
             .where(Ticket.doctor_workday_id.in_(workday_ids))
             .order_by(Ticket.number)
         ):
+            # талон отобран по in_(workday_ids), поэтому ссылка не бывает NULL
+            assert ticket.doctor_workday_id is not None
             tickets_by_workday.setdefault(ticket.doctor_workday_id, []).append(ticket)
 
     rooms = []

@@ -1,6 +1,6 @@
 """Пароли, JWT-токены и проверка ролей."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import bcrypt
 import jwt
@@ -31,7 +31,7 @@ def create_access_token(user: AppUser) -> str:
     payload = {
         "sub": str(user.id),
         "role": user.role.value,
-        "exp": datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes),
+        "exp": datetime.now(UTC) + timedelta(minutes=settings.access_token_expire_minutes),
     }
     return jwt.encode(payload, settings.secret_key, algorithm=ALGORITHM)
 
@@ -46,8 +46,8 @@ def get_current_user(
     try:
         payload = jwt.decode(credentials.credentials, settings.secret_key, algorithms=[ALGORITHM])
         user_id = int(payload.get("sub", ""))
-    except (jwt.PyJWTError, TypeError, ValueError):
-        raise HTTPException(status_code=401, detail="Недействительный или просроченный токен")
+    except (jwt.PyJWTError, TypeError, ValueError) as exc:
+        raise HTTPException(401, "Недействительный или просроченный токен") from exc
 
     user = db.get(AppUser, user_id)
     if user is None or not user.is_active:

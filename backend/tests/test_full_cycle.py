@@ -25,7 +25,8 @@ def setup_world(client, db_engine):
 
     specs = {}
     for name in ("Терапия", "УЗИ"):
-        specs[name] = client.post("/api/admin/specializations", headers=admin, json={"name": name}).json()["id"]
+        specs[name] = client.post(
+            "/api/admin/specializations", headers=admin, json={"name": name}).json()["id"]
 
     rooms = {}
     rooms["universal"] = client.post("/api/admin/rooms", headers=admin, json={"number": "204"}).json()["id"]
@@ -60,12 +61,13 @@ def setup_world(client, db_engine):
     return admin, auth_headers(client, "reg"), specs, rooms, doctors
 
 
-def test_full_patient_cycle(client, db_engine):
+def test_full_patient_cycle(client, db_engine):  # pylint: disable=too-many-locals
     admin, reg, specs, rooms, doctors = setup_world(client, db_engine)
 
     # --- утро в регистратуре ---
     morning = client.get(f"/api/registrar/morning?date={TOMORROW}", headers=reg).json()
-    assert {item["full_name"] for item in morning["expected"]} == {"Иванов Иван Иванович", "Петрова Мария Сергеевна"}
+    assert {item["full_name"] for item in morning["expected"]} == {
+        "Иванов Иван Иванович", "Петрова Мария Сергеевна"}
     assert {room["number"] for room in morning["free_rooms"]} == {"204", "305"}
 
     for doctor, room in ((doctors["ivanov"], rooms["universal"]), (doctors["petrova"], rooms["us"])):

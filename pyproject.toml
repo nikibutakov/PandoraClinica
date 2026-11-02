@@ -1,0 +1,58 @@
+# Конфигурации инструментов линтинга. Код — в backend/, команды запускаются
+# из корня репозитория: ruff check backend / mypy backend/app / pylint backend
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+src = ["backend"]
+
+[tool.ruff.lint]
+# B008 «вызов в значении по умолчанию» — это штатный паттерн FastAPI
+# (Depends() в сигнатурах роутеров), для него предупреждение неуместно.
+ignore = ["B008"]
+
+[tool.ruff.lint.per-file-ignores]
+# в тестах из setup_world() распаковываются все переменные, часть не используется
+"backend/tests/*" = ["RUF059"]
+
+[tool.mypy]
+python_version = "3.11"
+# пока без строгого режима: проект типизируется постепенно
+check_untyped_defs = true
+no_implicit_optional = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+
+[tool.pylint.main]
+py-version = "3.11"
+# тесты импортируют пакеты от корня backend/; команды запускаются из корня репо
+init-hook = 'import sys; sys.path.append("backend")'
+# миграции Alembic — генерируемый код, линтить его нет смысла
+ignore-paths = ["^backend[\\\\/]migrations"]
+
+[tool.pylint.design]
+# эндпоинты выгрузки и талонов плотные по локальным переменным и ветвлениям
+max-locals = 20
+max-branches = 15
+
+[tool.pylint.format]
+max-line-length = 110
+
+[tool.pylint.basic]
+# SessionLocal — каноническое имя фабрики сессий из документации SQLAlchemy/FastAPI
+good-names = ["SessionLocal", "db", "e", "ex", "_"]
+# члены enum'ов pylint считает класс-константами и требует UPPER_CASE;
+# наши enum'ы в нижнем регистре осознанно: имена совпадают со значениями в БД
+class-const-rgx = "^[a-zA-Z_][a-zA-Z0-9_]*$"
+
+[tool.pylint."messages control"]
+disable = [
+    # докстринги — техдолг: включить, когда допишем (README задаёт русский язык)
+    "missing-module-docstring",
+    "missing-class-docstring",
+    "missing-function-docstring",
+    # SQLAlchemy-модели и pydantic-схемы легитимно состоят из одних полей
+    "too-few-public-methods",
+    # дублирование запросов между роутерами — вопрос рефакторинга, не линтера
+    "duplicate-code",
+]

@@ -1,6 +1,7 @@
 """Блок администратора: персонал, справочники, найм врачей, график, слоты."""
 
-from datetime import date, datetime, time, timedelta
+import itertools
+from datetime import date, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import delete, select
@@ -353,7 +354,7 @@ def put_schedule(doctor_id: int, data: ScheduleIn, db: Session = Depends(get_db)
     for item in items:
         if item.start_time >= item.end_time:
             raise HTTPException(400, "Начало интервала не может быть позже конца")
-    for prev, nxt in zip(items, items[1:]):
+    for prev, nxt in itertools.pairwise(items):
         if prev.weekday == nxt.weekday and nxt.start_time < prev.end_time:
             raise HTTPException(400, "Интервалы графика пересекаются")
 
@@ -441,7 +442,7 @@ def generate_slots(
     tags=["Админ · Слоты"],
 )
 def list_slots(
-    date: date = Query(description="Какой день показать"),
+    date: date = Query(description="Какой день показать"),  # pylint: disable=redefined-outer-name
     doctor_id: int | None = Query(None, description="Фильтр по врачу"),
     specialization_id: int | None = Query(None, description="Фильтр по специальности"),
     db: Session = Depends(get_db),
@@ -518,7 +519,7 @@ def daily_export(
             )
 
     ru, foreign = ExportGroup(total=0), ExportGroup(total=0)
-    for record, ticket, patient, doctor, user, spec in rows:
+    for record, ticket, patient, _doctor, user, spec in rows:
         visit = ExportVisit(
             medical_record_id=record.id,
             ticket_id=ticket.id,

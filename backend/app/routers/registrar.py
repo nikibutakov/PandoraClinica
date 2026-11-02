@@ -41,8 +41,8 @@ from app.schemas import (
     PatientUpdate,
     ReferralOut,
     ReferralStatusIn,
-    ScheduleWindow,
     RoomOut,
+    ScheduleWindow,
     SlotOut,
     TicketCreate,
     TicketOut,
@@ -174,7 +174,8 @@ def create_workday(data: WorkdayCreate, db: Session = Depends(get_db)):
         )
 
     d = data.work_date or clinic_today()
-    busy_room = db.scalar(select(DoctorWorkday).where(DoctorWorkday.work_date == d, DoctorWorkday.room_id == room.id))
+    busy_room = db.scalar(
+        select(DoctorWorkday).where(DoctorWorkday.work_date == d, DoctorWorkday.room_id == room.id))
     if busy_room:
         raise HTTPException(409, f"Кабинет {room.number} на {d} уже занят")
     busy_doctor = db.scalar(
@@ -192,9 +193,9 @@ def create_workday(data: WorkdayCreate, db: Session = Depends(get_db)):
     db.add(workday)
     try:
         db.commit()
-    except IntegrityError:
+    except IntegrityError as exc:
         db.rollback()
-        raise HTTPException(409, "Кабинет или врач на этот день уже заняты")
+        raise HTTPException(409, "Кабинет или врач на этот день уже заняты") from exc
     db.refresh(workday)
     return workday
 
@@ -414,6 +415,8 @@ def create_ticket(data: TicketCreate, db: Session = Depends(get_db)):
     elif appointment:
         # пациент по записи: врач и день берутся из слота
         slot = db.get(Slot, appointment.slot_id)
+        if slot is None:
+            raise HTTPException(404, "Слот записи не найден")
         ticket_date = slot.starts_at.astimezone(clinic_tz()).date()
         workday = db.scalar(
             select(DoctorWorkday).where(
@@ -426,7 +429,9 @@ def create_ticket(data: TicketCreate, db: Session = Depends(get_db)):
 
     ticket = None
     for _ in range(5):
-        number = (db.scalar(select(func.max(Ticket.number)).where(Ticket.ticket_date == ticket_date)) or 0) + 1
+        number = (
+            db.scalar(select(func.max(Ticket.number)).where(Ticket.ticket_date == ticket_date)) or 0
+        ) + 1
         ticket = Ticket(
             ticket_date=ticket_date,
             number=number,
@@ -497,7 +502,8 @@ def update_referral(referral_id: int, data: ReferralStatusIn, db: Session = Depe
     tags=["Регистратура · Направления и перезвоны"],
 )
 def list_callbacks(
-    status: CallbackStatus | None = Query(None, description="Фильтр по статусу; без параметра — все (свежие 200)"),
+    status: CallbackStatus | None = Query(
+        None, description="Фильтр по статусу; без параметра — все (свежие 200)"),
     db: Session = Depends(get_db),
 ):
     stmt = select(CallbackRequest).order_by(CallbackRequest.created_at.desc())

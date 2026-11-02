@@ -44,10 +44,10 @@ def clean_tables(db_engine):
 
 @pytest.fixture
 def client(db_engine):
-    TestSession = sessionmaker(bind=db_engine, expire_on_commit=False)
+    test_session = sessionmaker(bind=db_engine, expire_on_commit=False)
 
     def override_get_db():
-        session = TestSession()
+        session = test_session()
         try:
             yield session
         finally:

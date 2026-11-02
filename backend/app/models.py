@@ -300,7 +300,8 @@ class Referral(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     patient_id: Mapped[int] = mapped_column(ForeignKey("patient.id"))
     from_doctor_id: Mapped[int] = mapped_column(ForeignKey("doctor.id"), comment="Направивший врач")
-    to_specialization_id: Mapped[int] = mapped_column(ForeignKey("specialization.id"), comment="Куда направлен")
+    to_specialization_id: Mapped[int] = mapped_column(
+        ForeignKey("specialization.id"), comment="Куда направлен")
     reason: Mapped[str | None] = mapped_column(Text, comment="Повод направления")
     status: Mapped[ReferralStatus] = mapped_column(Enum(ReferralStatus, name="referral_status"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
