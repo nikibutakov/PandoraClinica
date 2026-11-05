@@ -38,7 +38,9 @@ export default function Visit() {
   const [searchParams] = useSearchParams();
 
   const [queue, setQueue] = useState<QueueItemOut[]>([]);
-  const [specializations, setSpecializations] = useState<SpecializationOut[]>([]);
+  const [specializations, setSpecializations] = useState<SpecializationOut[]>(
+    [],
+  );
   const [ticketId, setTicketId] = useState<number | null>(
     Number(searchParams.get("ticket")) || null,
   );
@@ -55,11 +57,13 @@ export default function Visit() {
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const [{ data: queueData, error: qError, response: qResponse }, { data: specs }] =
-        await Promise.all([
-          api.GET("/api/doctor/queue"),
-          api.GET("/api/public/specializations"),
-        ]);
+      const [
+        { data: queueData, error: qError, response: qResponse },
+        { data: specs },
+      ] = await Promise.all([
+        api.GET("/api/doctor/queue"),
+        api.GET("/api/public/specializations"),
+      ]);
       if (cancelled) return;
       if (queueData) {
         setQueue(queueData);
@@ -94,7 +98,11 @@ export default function Visit() {
     }
     const values = await form.validateFields();
     setSaving(true);
-    const { data, error: body, response } = await api.POST("/api/doctor/visits", {
+    const {
+      data,
+      error: body,
+      response,
+    } = await api.POST("/api/doctor/visits", {
       body: {
         ticket_id: ticketId,
         complaints: values.complaints ?? null,
@@ -154,16 +162,21 @@ export default function Visit() {
           />
           {ticket && (
             <Descriptions size="small" column={3} bordered>
-              <Descriptions.Item label="Талон">№{ticket.number}</Descriptions.Item>
+              <Descriptions.Item label="Талон">
+                №{ticket.number}
+              </Descriptions.Item>
               <Descriptions.Item label="Пациент">
                 {ticket.patient_name ?? "—"}
               </Descriptions.Item>
               <Descriptions.Item label="Запись на">
                 {ticket.appointment_starts_at
-                  ? new Date(ticket.appointment_starts_at).toLocaleString("ru-RU", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })
+                  ? new Date(ticket.appointment_starts_at).toLocaleString(
+                      "ru-RU",
+                      {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      },
+                    )
                   : "живая очередь"}
               </Descriptions.Item>
             </Descriptions>
@@ -174,10 +187,16 @@ export default function Visit() {
       <Card size="small" title="Медкарта">
         <Form form={form} layout="vertical">
           <Form.Item name="complaints" label="Жалобы">
-            <Input.TextArea rows={2} placeholder="Например: боль в груди при нагрузке" />
+            <Input.TextArea
+              rows={2}
+              placeholder="Например: боль в груди при нагрузке"
+            />
           </Form.Item>
           <Form.Item name="anamnesis" label="Анамнез">
-            <Input.TextArea rows={2} placeholder="Когда началось, чем лечился ранее" />
+            <Input.TextArea
+              rows={2}
+              placeholder="Когда началось, чем лечился ранее"
+            />
           </Form.Item>
           <Form.Item name="treatment" label="Лечение и рекомендации">
             <Input.TextArea rows={2} placeholder="Назначения, рекомендации" />
@@ -190,7 +209,9 @@ export default function Visit() {
         title="Диагнозы по МКБ-10"
         extra={
           <Button
-            onClick={() => setDiagnoses((prev) => [...prev, { code: "", name: "" }])}
+            onClick={() =>
+              setDiagnoses((prev) => [...prev, { code: "", name: "" }])
+            }
           >
             Добавить диагноз
           </Button>
@@ -265,7 +286,10 @@ export default function Visit() {
                 placeholder="Специальность"
                 value={referralSpecId}
                 onChange={setReferralSpecId}
-                options={specializations.map((s) => ({ value: s.id, label: s.name }))}
+                options={specializations.map((s) => ({
+                  value: s.id,
+                  label: s.name,
+                }))}
               />
               <Input
                 style={{ width: 420 }}

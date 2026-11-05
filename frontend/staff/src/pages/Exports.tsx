@@ -49,14 +49,15 @@ export default function Exports() {
 
   const load = async () => {
     setLoading(true);
-    const { data, error: body, response } = await api.GET(
-      "/api/admin/reports/daily",
-      {
-        params: {
-          query: date ? { date: date.format("YYYY-MM-DD") } : {},
-        },
+    const {
+      data,
+      error: body,
+      response,
+    } = await api.GET("/api/admin/reports/daily", {
+      params: {
+        query: date ? { date: date.format("YYYY-MM-DD") } : {},
       },
-    );
+    });
     if (data) {
       setReport(data);
       setError("");

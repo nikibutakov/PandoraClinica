@@ -44,7 +44,9 @@ export default function SlotsAdmin() {
   const [specializationId, setSpecializationId] = useState<number | null>(null);
   const [slots, setSlots] = useState<SlotOut[]>([]);
   const [doctors, setDoctors] = useState<DoctorOut[]>([]);
-  const [specializations, setSpecializations] = useState<SpecializationOut[]>([]);
+  const [specializations, setSpecializations] = useState<SpecializationOut[]>(
+    [],
+  );
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -68,7 +70,11 @@ export default function SlotsAdmin() {
     if (controlDate === null) return;
     let cancelled = false;
     void (async () => {
-      const { data, error: body, response } = await api.GET("/api/admin/slots", {
+      const {
+        data,
+        error: body,
+        response,
+      } = await api.GET("/api/admin/slots", {
         params: {
           query: {
             date: controlDate.format("YYYY-MM-DD"),
@@ -96,17 +102,18 @@ export default function SlotsAdmin() {
       return;
     }
     setGenerating(true);
-    const { data, error: body, response } = await api.POST(
-      "/api/admin/slots/generate",
-      {
-        params: {
-          query: {
-            date_from: dateFrom.format("YYYY-MM-DD"),
-            date_to: dateTo.format("YYYY-MM-DD"),
-          },
+    const {
+      data,
+      error: body,
+      response,
+    } = await api.POST("/api/admin/slots/generate", {
+      params: {
+        query: {
+          date_from: dateFrom.format("YYYY-MM-DD"),
+          date_to: dateTo.format("YYYY-MM-DD"),
         },
       },
-    );
+    });
     setGenerating(false);
     if (response.ok) {
       message.success(
@@ -125,12 +132,17 @@ export default function SlotsAdmin() {
       render: (_, s) =>
         `${dayjs(s.starts_at).format("HH:mm")}–${dayjs(s.ends_at).format("HH:mm")}`,
     },
-    { title: "Врач", dataIndex: "doctor_name", render: (v: string | null) => v ?? "—" },
+    {
+      title: "Врач",
+      dataIndex: "doctor_name",
+      render: (v: string | null) => v ?? "—",
+    },
     {
       title: "Специальность",
       key: "spec",
       render: (_, s) =>
-        specializations.find((sp) => sp.id === s.specialization_id)?.name ?? "—",
+        specializations.find((sp) => sp.id === s.specialization_id)?.name ??
+        "—",
     },
     {
       title: "Статус",
@@ -165,7 +177,11 @@ export default function SlotsAdmin() {
             placeholder="По"
             allowClear={false}
           />
-          <Button type="primary" loading={generating} onClick={() => void generate()}>
+          <Button
+            type="primary"
+            loading={generating}
+            onClick={() => void generate()}
+          >
             Сгенерировать
           </Button>
           <Typography.Text type="secondary">
@@ -201,7 +217,10 @@ export default function SlotsAdmin() {
               allowClear
               value={specializationId}
               onChange={setSpecializationId}
-              options={specializations.map((s) => ({ value: s.id, label: s.name }))}
+              options={specializations.map((s) => ({
+                value: s.id,
+                label: s.name,
+              }))}
             />
           </Flex>
           {error && <Typography.Text type="danger">{error}</Typography.Text>}

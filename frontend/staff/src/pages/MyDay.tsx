@@ -60,8 +60,7 @@ export default function MyDay() {
         setQueue(queueRes.data);
         setError("");
       } else {
-        const failed =
-          todayRes.data === undefined ? todayRes : queueRes;
+        const failed = todayRes.data === undefined ? todayRes : queueRes;
         setError(formatApiError(failed.error, failed.response.status));
       }
     };
@@ -74,10 +73,13 @@ export default function MyDay() {
   }, []);
 
   const call = async (ticket: QueueItemOut) => {
-    const { data, error: body, response } = await api.POST(
-      "/api/doctor/queue/{ticket_id}/call",
-      { params: { path: { ticket_id: ticket.id } } },
-    );
+    const {
+      data,
+      error: body,
+      response,
+    } = await api.POST("/api/doctor/queue/{ticket_id}/call", {
+      params: { path: { ticket_id: ticket.id } },
+    });
     if (data) {
       message.success(`Пациент №${ticket.number} вызван — номер на табло`);
       setQueue((prev) =>
@@ -89,10 +91,13 @@ export default function MyDay() {
   };
 
   const skip = async (ticket: QueueItemOut) => {
-    const { data, error: body, response } = await api.POST(
-      "/api/doctor/queue/{ticket_id}/skip",
-      { params: { path: { ticket_id: ticket.id } } },
-    );
+    const {
+      data,
+      error: body,
+      response,
+    } = await api.POST("/api/doctor/queue/{ticket_id}/skip", {
+      params: { path: { ticket_id: ticket.id } },
+    });
     if (data) {
       message.info(`Талон №${ticket.number} пропущен`);
       setQueue((prev) =>
@@ -108,21 +113,32 @@ export default function MyDay() {
       title: "№",
       dataIndex: "number",
       width: 70,
-      render: (n: number) => <Typography.Text strong style={{ fontSize: 18 }}>{n}</Typography.Text>,
+      render: (n: number) => (
+        <Typography.Text strong style={{ fontSize: 18 }}>
+          {n}
+        </Typography.Text>
+      ),
     },
-    { title: "Пациент", dataIndex: "patient_name", render: (v: string | null) => v ?? "—" },
+    {
+      title: "Пациент",
+      dataIndex: "patient_name",
+      render: (v: string | null) => v ?? "—",
+    },
     {
       title: "Запись на",
       dataIndex: "appointment_starts_at",
       width: 110,
-      render: (iso: string | null) => (iso ? dayjs(iso).format("HH:mm") : "живая очередь"),
+      render: (iso: string | null) =>
+        iso ? dayjs(iso).format("HH:mm") : "живая очередь",
     },
     {
       title: "Статус",
       dataIndex: "status",
       width: 130,
       render: (status: QueueItemOut["status"]) => (
-        <Tag color={TICKET_STATUS[status].color}>{TICKET_STATUS[status].label}</Tag>
+        <Tag color={TICKET_STATUS[status].color}>
+          {TICKET_STATUS[status].label}
+        </Tag>
       ),
     },
     {
@@ -139,7 +155,10 @@ export default function MyDay() {
           {(ticket.status === "waiting" || ticket.status === "called") && (
             <>
               {ticket.status === "called" && (
-                <Button type="primary" onClick={() => navigate(`/visit?ticket=${ticket.id}`)}>
+                <Button
+                  type="primary"
+                  onClick={() => navigate(`/visit?ticket=${ticket.id}`)}
+                >
                   Приём
                 </Button>
               )}

@@ -4,16 +4,7 @@
  */
 
 import { useEffect, useState } from "react";
-import {
-  App,
-  Button,
-  Select,
-  Space,
-  Table,
-  Tabs,
-  Tag,
-  Typography,
-} from "antd";
+import { App, Button, Select, Space, Table, Tabs, Tag, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
@@ -28,13 +19,19 @@ type ReferralStatus = components["schemas"]["ReferralStatus"];
 type PatientOut = components["schemas"]["PatientOut"];
 type SpecializationOut = components["schemas"]["SpecializationOut"];
 
-const CALLBACK_STATUS: Record<CallbackStatus, { label: string; color: string }> = {
+const CALLBACK_STATUS: Record<
+  CallbackStatus,
+  { label: string; color: string }
+> = {
   new: { label: "Новая", color: "blue" },
   in_progress: { label: "В работе", color: "gold" },
   done: { label: "Обработана", color: "green" },
 };
 
-const REFERRAL_STATUS: Record<ReferralStatus, { label: string; color: string }> = {
+const REFERRAL_STATUS: Record<
+  ReferralStatus,
+  { label: string; color: string }
+> = {
   active: { label: "Действует", color: "blue" },
   used: { label: "Использовано", color: "green" },
   cancelled: { label: "Отменено", color: "default" },
@@ -46,22 +43,28 @@ export default function Referrals() {
 
   const [callbacks, setCallbacks] = useState<CallbackOut[]>([]);
   const [referrals, setReferrals] = useState<ReferralOut[]>([]);
-  const [referralStatus, setReferralStatus] = useState<ReferralStatus>("active");
+  const [referralStatus, setReferralStatus] =
+    useState<ReferralStatus>("active");
   const [patients, setPatients] = useState<PatientOut[]>([]);
-  const [specializations, setSpecializations] = useState<SpecializationOut[]>([]);
+  const [specializations, setSpecializations] = useState<SpecializationOut[]>(
+    [],
+  );
   const [error, setError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const [{ data: cbData, error: cbError, response: cbResponse }, { data: patientsData }, { data: specs }] =
-        await Promise.all([
-          api.GET("/api/registrar/callbacks"),
-          api.GET("/api/registrar/patients", {
-            params: { query: { query: "" } },
-          }),
-          api.GET("/api/public/specializations"),
-        ]);
+      const [
+        { data: cbData, error: cbError, response: cbResponse },
+        { data: patientsData },
+        { data: specs },
+      ] = await Promise.all([
+        api.GET("/api/registrar/callbacks"),
+        api.GET("/api/registrar/patients", {
+          params: { query: { query: "" } },
+        }),
+        api.GET("/api/public/specializations"),
+      ]);
       if (cancelled) return;
       if (cbData) setCallbacks(cbData);
       else setError(formatApiError(cbError, cbResponse.status));
@@ -77,10 +80,13 @@ export default function Referrals() {
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const { data, error: body, response } = await api.GET(
-        "/api/registrar/referrals",
-        { params: { query: { status: referralStatus } } },
-      );
+      const {
+        data,
+        error: body,
+        response,
+      } = await api.GET("/api/registrar/referrals", {
+        params: { query: { status: referralStatus } },
+      });
       if (cancelled) return;
       if (data) {
         setReferrals(data);
@@ -95,10 +101,14 @@ export default function Referrals() {
   }, [referralStatus]);
 
   const patchCallback = async (id: number, status: CallbackStatus) => {
-    const { data, error: body, response } = await api.PATCH(
-      "/api/registrar/callbacks/{callback_id}",
-      { params: { path: { callback_id: id } }, body: { status } },
-    );
+    const {
+      data,
+      error: body,
+      response,
+    } = await api.PATCH("/api/registrar/callbacks/{callback_id}", {
+      params: { path: { callback_id: id } },
+      body: { status },
+    });
     if (data) {
       setCallbacks((prev) => prev.map((c) => (c.id === id ? data : c)));
     } else {
@@ -120,8 +130,16 @@ export default function Referrals() {
       render: (iso: string) => dayjs(iso).format("DD.MM HH:mm"),
     },
     { title: "Телефон", dataIndex: "phone", width: 160 },
-    { title: "Имя", dataIndex: "full_name", render: (v: string | null) => v ?? "—" },
-    { title: "Комментарий", dataIndex: "comment", render: (v: string | null) => v ?? "—" },
+    {
+      title: "Имя",
+      dataIndex: "full_name",
+      render: (v: string | null) => v ?? "—",
+    },
+    {
+      title: "Комментарий",
+      dataIndex: "comment",
+      render: (v: string | null) => v ?? "—",
+    },
     {
       title: "Статус",
       dataIndex: "status",
@@ -156,13 +174,21 @@ export default function Referrals() {
 
   const referralColumns: ColumnsType<ReferralOut> = [
     { title: "№", dataIndex: "id", width: 60 },
-    { title: "Пациент", key: "patient", render: (_, r) => patientName(r.patient_id) },
+    {
+      title: "Пациент",
+      key: "patient",
+      render: (_, r) => patientName(r.patient_id),
+    },
     {
       title: "К специальности",
       key: "spec",
       render: (_, r) => specName(r.to_specialization_id),
     },
-    { title: "Причина", dataIndex: "reason", render: (v: string | null) => v ?? "—" },
+    {
+      title: "Причина",
+      dataIndex: "reason",
+      render: (v: string | null) => v ?? "—",
+    },
     {
       title: "Создано",
       dataIndex: "created_at",
@@ -226,9 +252,9 @@ export default function Referrals() {
                   style={{ width: 220, marginBottom: 12 }}
                   value={referralStatus}
                   onChange={setReferralStatus}
-                  options={(["active", "used", "cancelled"] as ReferralStatus[]).map(
-                    (s) => ({ value: s, label: REFERRAL_STATUS[s].label }),
-                  )}
+                  options={(
+                    ["active", "used", "cancelled"] as ReferralStatus[]
+                  ).map((s) => ({ value: s, label: REFERRAL_STATUS[s].label }))}
                 />
                 <Table
                   rowKey="id"

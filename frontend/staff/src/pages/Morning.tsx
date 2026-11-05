@@ -1,7 +1,18 @@
 /** Утренний экран смены регистратуры (E1): кто ожидается, закрепление за кабинетами. */
 
 import { useEffect, useState } from "react";
-import { App, Button, Card, Modal, Select, Space, Spin, Table, Tag, Typography } from "antd";
+import {
+  App,
+  Button,
+  Card,
+  Modal,
+  Select,
+  Space,
+  Spin,
+  Table,
+  Tag,
+  Typography,
+} from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 
@@ -36,9 +47,11 @@ export default function Morning() {
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const { data: body, error: errBody, response } = await api.GET(
-        "/api/registrar/morning",
-      );
+      const {
+        data: body,
+        error: errBody,
+        response,
+      } = await api.GET("/api/registrar/morning");
       if (cancelled) return;
       if (body) {
         setData(body);
@@ -58,10 +71,13 @@ export default function Morning() {
   const assign = async () => {
     if (!assigning || roomId === null) return;
     setSaving(true);
-    const { data: workday, error: body, response } = await api.POST(
-      "/api/registrar/workdays",
-      { body: { doctor_id: assigning.doctor_id, room_id: roomId } },
-    );
+    const {
+      data: workday,
+      error: body,
+      response,
+    } = await api.POST("/api/registrar/workdays", {
+      body: { doctor_id: assigning.doctor_id, room_id: roomId },
+    });
     setSaving(false);
     if (workday) {
       message.success(
@@ -82,9 +98,7 @@ export default function Morning() {
       title: "Приём по графику",
       dataIndex: "windows",
       render: (windows: MorningDoctor["windows"]) =>
-        windows.map((w, i) => (
-          <Tag key={i}>{formatWindow(w)}</Tag>
-        )),
+        windows.map((w, i) => <Tag key={i}>{formatWindow(w)}</Tag>),
     },
     {
       title: "",
@@ -116,7 +130,8 @@ export default function Morning() {
     },
   ];
 
-  if (loading) return <Spin size="large" style={{ display: "block", margin: 80 }} />;
+  if (loading)
+    return <Spin size="large" style={{ display: "block", margin: 80 }} />;
   if (error) return <Typography.Text type="danger">{error}</Typography.Text>;
   if (!data) return null;
 
@@ -158,7 +173,9 @@ export default function Morning() {
             {data.free_rooms.map((room: RoomOut) => (
               <Tag key={room.id}>
                 № {room.number}
-                {room.specialization_name ? ` · ${room.specialization_name}` : " · универсальный"}
+                {room.specialization_name
+                  ? ` · ${room.specialization_name}`
+                  : " · универсальный"}
               </Tag>
             ))}
           </Space>

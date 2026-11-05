@@ -167,8 +167,7 @@ function Board() {
                       style={{ color: "#001529", fontSize: 26 }}
                     >
                       пройдите
-                      <br />
-                      в кабинет
+                      <br />в кабинет
                     </Typography.Text>
                   </Flex>
                 ) : (

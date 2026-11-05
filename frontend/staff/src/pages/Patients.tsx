@@ -48,10 +48,13 @@ export default function Patients() {
 
   const search = async (q: string) => {
     setLoading(true);
-    const { data, error: body, response } = await api.GET(
-      "/api/registrar/patients",
-      { params: { query: { query: q } } },
-    );
+    const {
+      data,
+      error: body,
+      response,
+    } = await api.GET("/api/registrar/patients", {
+      params: { query: { query: q } },
+    });
     if (data) {
       setPatients(data);
       setError("");
@@ -64,10 +67,13 @@ export default function Patients() {
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const { data, error: body, response } = await api.GET(
-        "/api/registrar/patients",
-        { params: { query: { query: "" } } },
-      );
+      const {
+        data,
+        error: body,
+        response,
+      } = await api.GET("/api/registrar/patients", {
+        params: { query: { query: "" } },
+      });
       if (cancelled) return;
       if (data) {
         setPatients(data);
@@ -87,27 +93,27 @@ export default function Patients() {
     const values = await form.validateFields();
     const isForeign = values.citizenship === "FOREIGN";
     setSaving(true);
-    const { data, error: body, response } = await api.POST(
-      "/api/registrar/patients",
-      {
-        body: {
-          full_name: values.full_name,
-          birth_date:
-            values.birth_date
-              ? (values.birth_date as { format: (f: string) => string }).format(
-                  "YYYY-MM-DD",
-                )
-              : null,
-          citizenship: isForeign
-            ? (values.citizenship_code ?? "UZB").toUpperCase()
-            : "RUS",
-          snils: values.snils?.trim() ? values.snils.trim() : null,
-          phone: values.phone?.trim() ? values.phone.trim() : null,
-          insurance_policy: values.insurance_policy?.trim() || null,
-          insurance_company: values.insurance_company?.trim() || null,
-        },
+    const {
+      data,
+      error: body,
+      response,
+    } = await api.POST("/api/registrar/patients", {
+      body: {
+        full_name: values.full_name,
+        birth_date: values.birth_date
+          ? (values.birth_date as { format: (f: string) => string }).format(
+              "YYYY-MM-DD",
+            )
+          : null,
+        citizenship: isForeign
+          ? (values.citizenship_code ?? "UZB").toUpperCase()
+          : "RUS",
+        snils: values.snils?.trim() ? values.snils.trim() : null,
+        phone: values.phone?.trim() ? values.phone.trim() : null,
+        insurance_policy: values.insurance_policy?.trim() || null,
+        insurance_company: values.insurance_company?.trim() || null,
       },
-    );
+    });
     setSaving(false);
     if (data) {
       message.success(`Пациент «${data.full_name}» зарегистрирован`);
@@ -120,22 +126,42 @@ export default function Patients() {
   };
 
   const columns: ColumnsType<PatientOut> = [
-    { title: "ФИО", dataIndex: "full_name", render: (v: string | null) => v ?? "— (личность не установлена)" },
+    {
+      title: "ФИО",
+      dataIndex: "full_name",
+      render: (v: string | null) => v ?? "— (личность не установлена)",
+    },
     {
       title: "Гражданство",
       dataIndex: "citizenship",
       width: 130,
       render: (c: string) =>
-        c === "RUS" ? <Tag color="green">РФ</Tag> : <Tag color="purple">{c}</Tag>,
+        c === "RUS" ? (
+          <Tag color="green">РФ</Tag>
+        ) : (
+          <Tag color="purple">{c}</Tag>
+        ),
     },
-    { title: "СНИЛС", dataIndex: "snils", width: 140, render: (v: string | null) => v ?? "—" },
+    {
+      title: "СНИЛС",
+      dataIndex: "snils",
+      width: 140,
+      render: (v: string | null) => v ?? "—",
+    },
     {
       title: "Страховка",
       key: "insurance",
       render: (_, p) =>
-        p.insurance_policy ? `${p.insurance_policy}${p.insurance_company ? ` · ${p.insurance_company}` : ""}` : "—",
+        p.insurance_policy
+          ? `${p.insurance_policy}${p.insurance_company ? ` · ${p.insurance_company}` : ""}`
+          : "—",
     },
-    { title: "Телефон", dataIndex: "phone", width: 150, render: (v: string | null) => v ?? "—" },
+    {
+      title: "Телефон",
+      dataIndex: "phone",
+      width: 150,
+      render: (v: string | null) => v ?? "—",
+    },
   ];
 
   return (
@@ -226,7 +252,10 @@ export default function Patients() {
                 label="Гражданство (код ISO 3166-1)"
                 initialValue="UZB"
                 rules={[
-                  { pattern: /^[A-Za-z]{3}$/, message: "Три латинские буквы, например UZB" },
+                  {
+                    pattern: /^[A-Za-z]{3}$/,
+                    message: "Три латинские буквы, например UZB",
+                  },
                 ]}
               >
                 <Input placeholder="UZB" maxLength={3} />

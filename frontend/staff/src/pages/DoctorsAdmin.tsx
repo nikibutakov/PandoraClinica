@@ -54,7 +54,9 @@ interface IntervalRow {
 export default function DoctorsAdmin() {
   const { message } = App.useApp();
   const [doctors, setDoctors] = useState<DoctorOut[]>([]);
-  const [specializations, setSpecializations] = useState<SpecializationOut[]>([]);
+  const [specializations, setSpecializations] = useState<SpecializationOut[]>(
+    [],
+  );
   const [error, setError] = useState("");
 
   const [hireOpen, setHireOpen] = useState(false);
@@ -97,7 +99,11 @@ export default function DoctorsAdmin() {
   const hire = async () => {
     const values = await hireForm.validateFields();
     setSaving(true);
-    const { data, error: body, response } = await api.POST("/api/admin/doctors", {
+    const {
+      data,
+      error: body,
+      response,
+    } = await api.POST("/api/admin/doctors", {
       body: {
         full_name: values.full_name,
         login: values.login,
@@ -111,7 +117,9 @@ export default function DoctorsAdmin() {
     });
     setSaving(false);
     if (data) {
-      message.success(`Врач «${data.full_name}» нанят: учётка и договор созданы`);
+      message.success(
+        `Врач «${data.full_name}» нанят: учётка и договор созданы`,
+      );
       setHireOpen(false);
       hireForm.resetFields();
       void loadDoctors();
@@ -122,10 +130,9 @@ export default function DoctorsAdmin() {
 
   const openSchedule = async (doctor: DoctorOut) => {
     setScheduleDoctor(doctor);
-    const { data } = await api.GET(
-      "/api/admin/doctors/{doctor_id}/schedule",
-      { params: { path: { doctor_id: doctor.id } } },
-    );
+    const { data } = await api.GET("/api/admin/doctors/{doctor_id}/schedule", {
+      params: { path: { doctor_id: doctor.id } },
+    });
     setIntervals(
       (data ?? []).map((t: ScheduleTemplateOut) => ({
         weekday: t.weekday,
@@ -139,24 +146,27 @@ export default function DoctorsAdmin() {
     if (scheduleDoctor === null) return;
     for (const row of intervals) {
       if (row.start >= row.end) {
-        message.warning(`Интервал ${WEEKDAYS[row.weekday]}: начало позже конца`);
+        message.warning(
+          `Интервал ${WEEKDAYS[row.weekday]}: начало позже конца`,
+        );
         return;
       }
     }
     setScheduleSaving(true);
-    const { data, error: body, response } = await api.PUT(
-      "/api/admin/doctors/{doctor_id}/schedule",
-      {
-        params: { path: { doctor_id: scheduleDoctor.id } },
-        body: {
-          items: intervals.map((r) => ({
-            weekday: r.weekday,
-            start_time: r.start,
-            end_time: r.end,
-          })),
-        },
+    const {
+      data,
+      error: body,
+      response,
+    } = await api.PUT("/api/admin/doctors/{doctor_id}/schedule", {
+      params: { path: { doctor_id: scheduleDoctor.id } },
+      body: {
+        items: intervals.map((r) => ({
+          weekday: r.weekday,
+          start_time: r.start,
+          end_time: r.end,
+        })),
       },
-    );
+    });
     setScheduleSaving(false);
     if (data) {
       message.success("График сохранён (полная замена шаблонов)");
@@ -176,7 +186,9 @@ export default function DoctorsAdmin() {
     );
     if (response.ok) {
       message.success(
-        isActive ? "Врач снова работает" : "Врач деактивирован — в графики не попадает",
+        isActive
+          ? "Врач снова работает"
+          : "Врач деактивирован — в графики не попадает",
       );
       void loadDoctors();
     } else {
@@ -204,7 +216,8 @@ export default function DoctorsAdmin() {
       title: "Работает",
       dataIndex: "is_active",
       width: 110,
-      render: (v: boolean) => (v ? <Tag color="green">да</Tag> : <Tag>нет</Tag>),
+      render: (v: boolean) =>
+        v ? <Tag color="green">да</Tag> : <Tag>нет</Tag>,
     },
     {
       title: "",
@@ -289,7 +302,10 @@ export default function DoctorsAdmin() {
             rules={[{ required: true, message: "Выберите специальность" }]}
           >
             <Select
-              options={specializations.map((s) => ({ value: s.id, label: s.name }))}
+              options={specializations.map((s) => ({
+                value: s.id,
+                label: s.name,
+              }))}
             />
           </Form.Item>
           <Form.Item
@@ -333,7 +349,10 @@ export default function DoctorsAdmin() {
               <Select
                 style={{ width: 90 }}
                 value={row.weekday}
-                options={WEEKDAYS.map((label, weekday) => ({ value: weekday, label }))}
+                options={WEEKDAYS.map((label, weekday) => ({
+                  value: weekday,
+                  label,
+                }))}
                 onChange={(weekday) =>
                   setIntervals((prev) =>
                     prev.map((r, j) => (j === i ? { ...r, weekday } : r)),

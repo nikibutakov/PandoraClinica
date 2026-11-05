@@ -41,7 +41,9 @@ export default function Appointments() {
   const [patientId, setPatientId] = useState<number | null>(null);
   const [patientName, setPatientName] = useState("");
 
-  const [specializations, setSpecializations] = useState<SpecializationOut[]>([]);
+  const [specializations, setSpecializations] = useState<SpecializationOut[]>(
+    [],
+  );
   const [specializationId, setSpecializationId] = useState<number | null>(null);
   const [date, setDate] = useState<dayjs.Dayjs | null>(dayjs());
 
@@ -56,7 +58,10 @@ export default function Appointments() {
   const [workdayId, setWorkdayId] = useState<number | null>(null);
 
   // запись только что создана: предложить талон на приём
-  const [booked, setBooked] = useState<{ appointment: AppointmentOut; slot: SlotOut } | null>(null);
+  const [booked, setBooked] = useState<{
+    appointment: AppointmentOut;
+    slot: SlotOut;
+  } | null>(null);
   const [ticketLoading, setTicketLoading] = useState(false);
 
   // справочники: специальности, направления, закреплённые врачи
@@ -100,9 +105,17 @@ export default function Appointments() {
       }
       setSlotsLoading(true);
       const from = (date ?? dayjs()).format("YYYY-MM-DD");
-      const to = (date ?? dayjs()).add(DAYS_TO_SHOW - 1, "day").format("YYYY-MM-DD");
+      const to = (date ?? dayjs())
+        .add(DAYS_TO_SHOW - 1, "day")
+        .format("YYYY-MM-DD");
       const { data, error, response } = await api.GET("/api/registrar/slots", {
-        params: { query: { specialization_id: specializationId, date_from: from, date_to: to } },
+        params: {
+          query: {
+            specialization_id: specializationId,
+            date_from: from,
+            date_to: to,
+          },
+        },
       });
       if (cancelled) return;
       if (data) {
@@ -123,16 +136,17 @@ export default function Appointments() {
       message.warning("Сначала выберите пациента");
       return;
     }
-    const { data: appointment, error, response } = await api.POST(
-      "/api/registrar/appointments",
-      {
-        body: {
-          slot_id: slot.id,
-          patient_id: patientId,
-          referral_id: referralId ?? undefined,
-        },
+    const {
+      data: appointment,
+      error,
+      response,
+    } = await api.POST("/api/registrar/appointments", {
+      body: {
+        slot_id: slot.id,
+        patient_id: patientId,
+        referral_id: referralId ?? undefined,
       },
-    );
+    });
     if (appointment) {
       setBooked({ appointment, slot });
       if (referralId) {
@@ -155,13 +169,18 @@ export default function Appointments() {
   const issueTicketForAppointment = async () => {
     if (!booked || patientId === null) return;
     setTicketLoading(true);
-    const { data: ticket, error, response } = await api.POST(
-      "/api/registrar/tickets",
-      { body: { patient_id: patientId, appointment_id: booked.appointment.id } },
-    );
+    const {
+      data: ticket,
+      error,
+      response,
+    } = await api.POST("/api/registrar/tickets", {
+      body: { patient_id: patientId, appointment_id: booked.appointment.id },
+    });
     setTicketLoading(false);
     if (ticket) {
-      message.success(`Талон №${ticket.number} выдан — номер появится на табло`);
+      message.success(
+        `Талон №${ticket.number} выдан — номер появится на табло`,
+      );
       setBooked(null);
     } else {
       message.error(formatApiError(error, response.status));
@@ -178,12 +197,17 @@ export default function Appointments() {
       message.warning("Выберите врача (смену)");
       return;
     }
-    const { data: ticket, error, response } = await api.POST(
-      "/api/registrar/tickets",
-      { body: { patient_id: patientId, doctor_workday_id: workdayId } },
-    );
+    const {
+      data: ticket,
+      error,
+      response,
+    } = await api.POST("/api/registrar/tickets", {
+      body: { patient_id: patientId, doctor_workday_id: workdayId },
+    });
     if (ticket) {
-      message.success(`Талон №${ticket.number} выдан — номер появится на табло`);
+      message.success(
+        `Талон №${ticket.number} выдан — номер появится на табло`,
+      );
     } else {
       message.error(formatApiError(error, response.status));
     }
@@ -203,7 +227,11 @@ export default function Appointments() {
       render: (_, s) =>
         `${dayjs(s.starts_at).format("HH:mm")}–${dayjs(s.ends_at).format("HH:mm")}`,
     },
-    { title: "Врач", dataIndex: "doctor_name", render: (v: string | null) => v ?? "—" },
+    {
+      title: "Врач",
+      dataIndex: "doctor_name",
+      render: (v: string | null) => v ?? "—",
+    },
     {
       title: "",
       key: "action",
@@ -271,7 +299,10 @@ export default function Appointments() {
               optionFilterProp="label"
               value={specializationId}
               onChange={setSpecializationId}
-              options={specializations.map((s) => ({ value: s.id, label: s.name }))}
+              options={specializations.map((s) => ({
+                value: s.id,
+                label: s.name,
+              }))}
             />
             <DatePicker
               value={date}
