@@ -12,6 +12,7 @@ import {
 } from "@pandora/shared";
 
 import StaffLayout from "./layout/StaffLayout";
+import Appointments from "./pages/Appointments";
 import Board from "./pages/Board";
 import Login from "./pages/Login";
 import Morning from "./pages/Morning";
@@ -58,10 +59,7 @@ export default function App() {
             path="/patients"
             element={<Stub title="Пациенты" plan="E2" />}
           />
-          <Route
-            path="/appointments"
-            element={<Stub title="Запись и талоны" plan="E3" />}
-          />
+          <Route path="/appointments" element={<Appointments />} />
           <Route
             path="/referrals"
             element={<Stub title="Направления и перезвоны" plan="E4" />}
