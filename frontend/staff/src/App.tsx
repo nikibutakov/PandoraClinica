@@ -16,6 +16,7 @@ import Appointments from "./pages/Appointments";
 import Board from "./pages/Board";
 import Login from "./pages/Login";
 import Morning from "./pages/Morning";
+import MyDay from "./pages/MyDay";
 import Stub from "./pages/Stub";
 
 /** «/» отправляет на домашнюю страницу по роли вошедшего. */
@@ -73,7 +74,7 @@ export default function App() {
             </RequireRole>
           }
         >
-          <Route path="/my-day" element={<Stub title="Мой день" plan="E5" />} />
+          <Route path="/my-day" element={<MyDay />} />
           <Route path="/visit" element={<Stub title="Приём" plan="E6" />} />
         </Route>
 
