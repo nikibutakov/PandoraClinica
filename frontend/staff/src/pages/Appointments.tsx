@@ -119,7 +119,8 @@ export default function Appointments() {
       });
       if (cancelled) return;
       if (data) {
-        setSlots(data);
+        // прошедшие слоты сегодняшнего дня не показываем
+        setSlots(data.filter((s) => dayjs(s.starts_at).isAfter(dayjs())));
         setSlotsError("");
       } else {
         setSlotsError(formatApiError(error, response.status));
