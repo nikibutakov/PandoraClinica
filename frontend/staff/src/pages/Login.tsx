@@ -57,8 +57,18 @@ export default function Login() {
           <input type="password" className="input-field" defaultValue="............" />
         </div>
 
-        <button className="btn btn-primary" style={{ width: '100%', padding: 10, fontSize: '0.9rem', marginTop: 8 }} onClick={handleLogin}>
+        <button className="btn btn-primary" style={{ width: '100%', padding: 10, fontSize: '0.9rem', marginTop: 8, marginBottom: 12 }} onClick={handleLogin}>
           Войти
+        </button>
+
+        {/* Кнопка открытия табло в новой вкладке */}
+        <button 
+          className="btn btn-outline" 
+          style={{ width: '100%', padding: 10, fontSize: '0.9rem', display: 'flex', justifyContent: 'center', gap: 8 }} 
+          onClick={() => window.open('/board', '_blank')}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+          Включить информационное табло
         </button>
       </div>
     </div>

@@ -24,6 +24,9 @@ import RegReferrals from './pages/registrar/RegReferrals';
 import DocMyDay from './pages/doctor/DocMyDay';
 import DocRecord from './pages/doctor/DocRecord';
 
+// Board
+import Board from './pages/board/Board';
+
 // Защита роутов
 function ProtectedRoute() {
   const { isAuthenticated } = useAuth();
@@ -35,6 +38,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/staff/login" element={<Login />} />
+      <Route path="/board" element={<Board />} /> {/* Публичный маршрут табло */}
       
       <Route element={<ProtectedRoute />}>
         <Route path="/staff" element={<Layout />}>

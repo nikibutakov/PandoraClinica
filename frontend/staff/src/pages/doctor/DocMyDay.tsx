@@ -35,7 +35,6 @@ function DraggableCard({
     id: patient.id,
   });
 
-  // Объединяем стили перетаскивания и кастомную рамку
   const style = {
     transform: transform ? CSS.Translate.toString(transform) : undefined,
     zIndex: isDragging ? 100 : 1,
@@ -48,9 +47,8 @@ function DraggableCard({
     <div 
       ref={setNodeRef} 
       className="kanban-card" 
-      style={style} // Оставлен только один пропс style
+      style={style}
     >
-      {/* Область за которую можно тянуть (вся карточка, но кнопки перехватывают клик) */}
       <div {...listeners} {...attributes}>
         <div className="flex justify-between items-start mb-2">
           <div className="font-semibold text-dark text-sm">{patient.name}</div>
@@ -127,14 +125,41 @@ export default function DocMyDay() {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 5, // Перетаскивание начнется только если сдвинуть мышь на 5 пикселей
+        distance: 5,
       },
     }),
     useSensor(KeyboardSensor)
   );
 
+  // Обновленная функция, которая синхронизирует данные с табло
   const movePatient = (id: string, newStatus: Patient['status']) => {
-    setPatients(patients.map(p => p.id === id ? { ...p, status: newStatus } : p));
+    const updatedPatients = patients.map(p => p.id === id ? { ...p, status: newStatus } : p);
+    setPatients(updatedPatients);
+
+    const calledPatient = updatedPatients.find(p => p.status === 'called');
+    const waitingPatients = updatedPatients.filter(p => p.status === 'waiting');
+
+    // Генератор случайных номеров талонов (для демонстрации)
+    const generateTicket = (patId: string) => {
+      const num = patId.replace(/\D/g, '') || Math.floor(Math.random() * 90 + 10);
+      return `G-0${num}`;
+    };
+
+    if (calledPatient) {
+      localStorage.setItem('board_called', JSON.stringify({
+        ticket: generateTicket(calledPatient.id),
+        room: '101',
+        doctor: 'Анна Иванова'
+      }));
+    }
+
+    localStorage.setItem('board_queue', JSON.stringify(
+      waitingPatients.map(p => ({
+        id: p.id,
+        ticket: generateTicket(p.id),
+        name: p.name.split(' ')[0] // Только имя для табло
+      }))
+    ));
   };
 
   const getPatientsByStatus = (status: Patient['status']) => patients.filter(p => p.status === status);

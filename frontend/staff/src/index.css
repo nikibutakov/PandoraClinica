@@ -73,6 +73,7 @@ input, select, textarea { font-family: inherit; }
 /* LAYOUT */
 #app-layout { display: flex; min-height: 100vh; background: var(--bg-body); }
 .sidebar { width: 240px; background: var(--white); border-right: 1px solid var(--border); display: flex; flex-direction: column; height: 100vh; position: fixed; left: 0; top: 0; z-index: 100; transition: transform 0.3s ease; }
+.sidebar.closed { transform: translateX(-100%); }
 .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
 .workspace-switcher { margin: 12px; padding: 10px; border: 1px solid var(--border); border-radius: 6px; display: flex; align-items: center; gap: 10px; }
 .nav-section { padding: 12px 0; flex-grow: 1; overflow-y: auto; }
@@ -85,7 +86,8 @@ input, select, textarea { font-family: inherit; }
 .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); }
 .sidebar-footer .nav-item { padding: 8px 0; border: none; background: none !important; color: var(--text-muted); }
 
-.main-content { flex: 1; margin-left: 240px; display: flex; flex-direction: column; min-height: 100vh; width: calc(100% - 240px); }
+.main-content { flex: 1; margin-left: 240px; display: flex; flex-direction: column; min-height: 100vh; width: calc(100% - 240px); transition: margin-left 0.3s ease, width 0.3s ease; }
+.main-content.expanded { margin-left: 0; width: 100%; }
 .topbar { height: 60px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; position: sticky; top: 0; z-index: 50; }
 .breadcrumbs { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-muted); }
 .breadcrumbs .current { color: var(--dark); font-weight: 500; }
@@ -95,6 +97,18 @@ input, select, textarea { font-family: inherit; }
 .user-info { text-align: right; }
 .user-name { font-size: 0.8rem; font-weight: 600; color: var(--dark); }
 .user-role { font-size: 0.7rem; color: var(--text-muted); }
+
+.menu-toggle {
+    display: block !important;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: var(--dark);
+    cursor: pointer;
+    margin-right: 16px;
+    transition: var(--transition);
+}
+.menu-toggle:hover { color: var(--primary); }
 
 .page-content { padding: 24px; flex-grow: 1; }
 .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
@@ -112,57 +126,22 @@ input, select, textarea { font-family: inherit; }
 
 /* REGISTRAR & DOCTOR SPECIFIC */
 .patient-layout { display: grid; grid-template-columns: 320px 1fr; gap: 20px; }
+.booking-layout { display: grid; grid-template-columns: 260px 1fr 300px; gap: 16px; }
+.kanban-board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.kanban-col { background: var(--bg-body); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; min-height: 400px; }
+.kanban-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-weight: 600; font-size: 0.85rem; color: var(--text-muted); }
+.kanban-card { background: var(--white); border: 1px solid var(--border); border-radius: 6px; padding: 12px; margin-bottom: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); transition: var(--transition); }
 .record-layout { display: grid; grid-template-columns: 260px 1fr; gap: 20px; }
 .tabs { display: flex; gap: 16px; border-bottom: 1px solid var(--border); margin-bottom: 0; padding: 0 16px; }
 .tab { padding: 12px 0; font-weight: 500; font-size: 0.85rem; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; transition: var(--transition); }
 .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
 
-/* KANBAN DOCTOR */
-.kanban-board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-.kanban-col { background: var(--bg-body); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; min-height: 400px; }
-.kanban-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-weight: 600; font-size: 0.85rem; color: var(--text-muted); }
-.kanban-card { background: var(--white); border: 1px solid var(--border); border-radius: 6px; padding: 12px; margin-bottom: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); transition: var(--transition); }
-
-/* ========================================= */
-/* СТИЛИ ДЛЯ ЗАПИСИ И ТАЛОНОВ (BOOKING)      */
-/* ========================================= */
-
-.booking-layout { 
-  display: grid; 
-  grid-template-columns: 260px 1fr 300px; 
-  gap: 16px; 
-}
-
-.booking-step { 
-  background: var(--white); 
-  border: 1px solid var(--border); 
-  border-radius: 10px; 
-  padding: 16px; 
-  display: flex; 
-  flex-direction: column; 
-}
-
-.step-title { 
-  font-weight: 600; 
-  margin-bottom: 4px; 
-  font-size: 0.95rem; 
-  color: var(--dark); 
-}
-
-.care-item { 
-  padding: 10px; 
-  border-radius: 6px; 
-  display: flex; 
-  justify-content: space-between; 
-  align-items: center; 
-  cursor: pointer; 
-  margin-bottom: 6px; 
-  transition: var(--transition); 
-  border: 1px solid transparent; 
-}
+/* BOOKING SPECIFIC */
+.booking-step { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; }
+.step-title { font-weight: 600; margin-bottom: 4px; font-size: 0.95rem; color: var(--dark); }
+.care-item { padding: 10px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-bottom: 6px; transition: var(--transition); border: 1px solid transparent; }
 .care-item:hover { background: var(--bg-body); }
 .care-item.active { background: var(--primary-light); border-color: var(--primary); }
-
 .calendar-mock { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; margin-bottom: 16px; }
 .cal-header { font-size: 0.7rem; color: var(--text-muted); font-weight: 500; padding-bottom: 6px; }
 .cal-day { padding: 8px 6px; border-radius: 4px; font-size: 0.8rem; color: var(--dark); cursor: pointer; transition: var(--transition); }
@@ -170,17 +149,13 @@ input, select, textarea { font-family: inherit; }
 .cal-day.active { background: var(--primary); color: var(--white); }
 .cal-day.text-muted { cursor: default; color: var(--text-muted); }
 .cal-day.text-muted:hover { background: transparent; }
-
 .time-slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .time-slot { padding: 8px; text-align: center; border: 1px solid var(--border); border-radius: 4px; font-size: 0.8rem; cursor: pointer; transition: var(--transition); }
 .time-slot:hover { border-color: var(--primary); color: var(--primary); }
 .time-slot.active { background: var(--primary); color: var(--white); border-color: var(--primary); }
 .time-slot.disabled { color: var(--text-muted); background: var(--bg-body); border-color: transparent; cursor: not-allowed; }
 
-/* ========================================= */
-/* ИСПРАВЛЕНИЯ ДЛЯ ФОРМ И СПИСКОВ            */
-/* ========================================= */
-
+/* ИСПРАВЛЕНИЯ ДЛЯ ФОРМ И СПИСКОВ */
 .search-bar { display: flex; gap: 12px; margin-bottom: 20px; align-items: center; width: 100%; }
 .search-bar .input-field { flex: 1; width: auto; }
 .search-bar .btn { flex-shrink: 0; }
@@ -193,6 +168,104 @@ input, select, textarea { font-family: inherit; }
 .patient-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .patient-list-item svg { flex-shrink: 0; }
 
+.info-row { display: flex; gap: 16px; align-items: center; padding: 6px 0; border-bottom: 1px dashed var(--border); font-size: 0.8rem; }
+.info-row > span:first-child { width: 60px; flex-shrink: 0; }
+
+/* ========================================= */
+/* СТИЛИ ДЛЯ ИНФОРМАЦИОННОГО ТАБЛО          */
+/* ========================================= */
+
+.board-container {
+  width: 100vw;
+  height: 100vh;
+  background-color: #1A2E35; /* Темный фон для контраста */
+  color: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  padding: 40px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.board-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 2.5rem;
+  margin-bottom: 40px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 20px;
+}
+
+.board-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 40px;
+  flex: 1;
+}
+
+.board-called-box {
+  background: linear-gradient(135deg, #0F8B78 0%, #0c7262 100%);
+  border-radius: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 40px rgba(15, 139, 120, 0.4);
+  animation: pulse-border 2s infinite;
+}
+
+.board-called-ticket {
+  font-size: 12rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 20px;
+  text-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.board-called-room {
+  font-size: 4rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 10px 40px;
+  border-radius: 20px;
+}
+
+.board-queue-list {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 30px;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+}
+
+.board-queue-title {
+  font-size: 2rem;
+  margin-bottom: 30px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.board-queue-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 2.5rem;
+  padding: 20px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.board-queue-item:last-child {
+  border-bottom: none;
+}
+
+@keyframes pulse-border {
+  0% { box-shadow: 0 0 0 0 rgba(15, 139, 120, 0.7); }
+  70% { box-shadow: 0 0 0 30px rgba(15, 139, 120, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(15, 139, 120, 0); }
+}
+
 /* RESPONSIVE */
 @media (max-width: 1200px) {
     .booking-layout { grid-template-columns: 1fr 1fr; }
@@ -204,53 +277,4 @@ input, select, textarea { font-family: inherit; }
     .sidebar.open { transform: translateX(0); }
     .main-content { margin-left: 0; width: 100%; }
     .dashboard-split, .patient-layout, .record-layout { grid-template-columns: 1fr; }
-}
-/* Замените старый .info-row на этот */
-.info-row { 
-  display: flex; 
-  gap: 16px; /* Добавили отступ между текстом */
-  align-items: center;
-  padding: 6px 0; 
-  border-bottom: 1px dashed var(--border); 
-  font-size: 0.8rem; 
-}
-/* Фиксируем ширину для первой метки, чтобы значения были ровно друг под другом */
-.info-row > span:first-child {
-  width: 60px; 
-  flex-shrink: 0;
-}
-/* ========================================= */
-/* АНИМАЦИЯ СКРЫТИЯ БОКОВОГО МЕНЮ            */
-/* ========================================= */
-
-.sidebar {
-    transition: transform 0.3s ease;
-}
-
-.sidebar.closed {
-    transform: translateX(-100%);
-}
-
-.main-content {
-    transition: margin-left 0.3s ease, width 0.3s ease;
-}
-
-.main-content.expanded {
-    margin-left: 0;
-    width: 100%;
-}
-
-/* Кнопка меню всегда видима */
-.menu-toggle {
-    display: block !important;
-    background: none;
-    border: none;
-    font-size: 1.2rem;
-    color: var(--dark);
-    cursor: pointer;
-    margin-right: 16px;
-    transition: var(--transition);
-}
-.menu-toggle:hover {
-    color: var(--primary);
 }
