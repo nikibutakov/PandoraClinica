@@ -12,9 +12,18 @@ import {
 } from "@pandora/shared";
 
 import StaffLayout from "./layout/StaffLayout";
+import Appointments from "./pages/Appointments";
 import Board from "./pages/Board";
+import DoctorsAdmin from "./pages/DoctorsAdmin";
+import Exports from "./pages/Exports";
 import Login from "./pages/Login";
+import Morning from "./pages/Morning";
+import MyDay from "./pages/MyDay";
+import Patients from "./pages/Patients";
+import Referrals from "./pages/Referrals";
+import SlotsAdmin from "./pages/SlotsAdmin";
 import Stub from "./pages/Stub";
+import Visit from "./pages/Visit";
 
 /** «/» отправляет на домашнюю страницу по роли вошедшего. */
 function Home() {
@@ -52,22 +61,10 @@ export default function App() {
             </RequireRole>
           }
         >
-          <Route
-            path="/morning"
-            element={<Stub title="Утро и кабинеты" plan="E1" />}
-          />
-          <Route
-            path="/patients"
-            element={<Stub title="Пациенты" plan="E2" />}
-          />
-          <Route
-            path="/appointments"
-            element={<Stub title="Запись и талоны" plan="E3" />}
-          />
-          <Route
-            path="/referrals"
-            element={<Stub title="Направления и перезвоны" plan="E4" />}
-          />
+          <Route path="/morning" element={<Morning />} />
+          <Route path="/patients" element={<Patients />} />
+          <Route path="/appointments" element={<Appointments />} />
+          <Route path="/referrals" element={<Referrals />} />
         </Route>
 
         <Route
@@ -77,8 +74,8 @@ export default function App() {
             </RequireRole>
           }
         >
-          <Route path="/my-day" element={<Stub title="Мой день" plan="E5" />} />
-          <Route path="/visit" element={<Stub title="Приём" plan="E6" />} />
+          <Route path="/my-day" element={<MyDay />} />
+          <Route path="/visit" element={<Visit />} />
         </Route>
 
         <Route
@@ -93,15 +90,9 @@ export default function App() {
             path="/directories"
             element={<Stub title="Справочники" plan="E9" />}
           />
-          <Route
-            path="/doctors"
-            element={<Stub title="Врачи и график" plan="E10" />}
-          />
-          <Route path="/slots" element={<Stub title="Слоты" plan="E11" />} />
-          <Route
-            path="/exports"
-            element={<Stub title="Выгрузки" plan="E12" />}
-          />
+          <Route path="/doctors" element={<DoctorsAdmin />} />
+          <Route path="/slots" element={<SlotsAdmin />} />
+          <Route path="/exports" element={<Exports />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

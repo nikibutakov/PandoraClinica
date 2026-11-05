@@ -248,9 +248,13 @@ def build_frontend() -> None:
 
 
 def port_taken(port: int) -> bool:
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.settimeout(0.5)
-        return sock.connect_ex(("127.0.0.1", port)) == 0
+    """Порт занят, если кто-то слушает на IPv4 или IPv6 (vite сидит на ::1)."""
+    for family, host in ((socket.AF_INET, "127.0.0.1"), (socket.AF_INET6, "::1")):
+        with socket.socket(family, socket.SOCK_STREAM) as sock:
+            sock.settimeout(0.5)
+            if sock.connect_ex((host, port)) == 0:
+                return True
+    return False
 
 
 def wait_http(url: str, timeout_sec: int = 60) -> None:
