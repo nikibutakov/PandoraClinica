@@ -14,6 +14,7 @@ import {
 import StaffLayout from "./layout/StaffLayout";
 import Board from "./pages/Board";
 import Login from "./pages/Login";
+import Morning from "./pages/Morning";
 import Stub from "./pages/Stub";
 
 /** «/» отправляет на домашнюю страницу по роли вошедшего. */
@@ -52,10 +53,7 @@ export default function App() {
             </RequireRole>
           }
         >
-          <Route
-            path="/morning"
-            element={<Stub title="Утро и кабинеты" plan="E1" />}
-          />
+          <Route path="/morning" element={<Morning />} />
           <Route
             path="/patients"
             element={<Stub title="Пациенты" plan="E2" />}

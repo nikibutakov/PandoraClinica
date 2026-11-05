@@ -4,7 +4,7 @@
  * Доступ ограничивается на уровне сети/nginx (D2), не логином.
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ConfigProvider, Flex, Typography, theme } from "antd";
 import { api } from "@pandora/shared";
 import type { components } from "@pandora/shared";
@@ -33,21 +33,26 @@ function Board() {
   const [data, setData] = useState<BoardOut | null>(null);
   const [offline, setOffline] = useState(false);
 
-  const load = useCallback(async () => {
-    const { data: body, response } = await api.GET("/api/board");
-    if (body) {
-      setData(body);
-      setOffline(false);
-    } else if (response.status >= 500 || response.status === 0) {
-      setOffline(true); // сервер недоступен — продолжаем показывать последнее
-    }
-  }, []);
-
   useEffect(() => {
-    void load();
-    const timer = setInterval(() => void load(), POLL_MS);
-    return () => clearInterval(timer);
-  }, [load]);
+    let cancelled = false;
+    // опрос табло: раз в 5 секунд; при сбое держим последние данные
+    const poll = async () => {
+      const { data: body } = await api.GET("/api/board");
+      if (cancelled) return;
+      if (body) {
+        setData(body);
+        setOffline(false);
+      } else {
+        setOffline(true);
+      }
+    };
+    void poll();
+    const timer = setInterval(() => void poll(), POLL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, []);
 
   return (
     <ConfigProvider theme={{ algorithm: theme.darkAlgorithm }}>
