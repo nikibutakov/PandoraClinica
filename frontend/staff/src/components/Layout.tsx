@@ -19,6 +19,7 @@ const menus = {
   ],
   doctor: [
     { path: '/staff/doc/myday', label: 'Мой день', icon: '📋' },
+    { path: '/staff/doc/records', label: 'Мед. карты', icon: '📁' }, // НОВЫЙ ПУНКТ
   ]
 };
 
@@ -91,12 +92,10 @@ export default function Layout() {
 
   return (
     <div id="app-layout" className="active">
-      {/* Десктопное меню */}
       <aside className="sidebar" style={{ display: window.innerWidth > 992 ? 'flex' : 'none' }}>
         {SidebarContent}
       </aside>
 
-      {/* Мобильное меню (AntD Drawer) */}
       <Drawer placement="left" open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} width={240} styles={{ body: { padding: 0 } }}>
         {SidebarContent}
       </Drawer>
@@ -126,7 +125,7 @@ export default function Layout() {
         </header>
 
         <div className="page-content">
-          <Outlet /> {/* Здесь рендерятся страницы */}
+          <Outlet />
         </div>
       </main>
     </div>
