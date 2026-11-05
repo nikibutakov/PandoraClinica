@@ -38,19 +38,19 @@ export default function RegShift() {
                   <td>
                     <Select
                       value={doc.status}
-                      style={{ width: 120 }}
+                      style={{ width: 140, height: 32 }}
                       onChange={(val) => handleUpdate(doc.id, 'status', val)}
                       options={[
-                        { value: 'active', label: <span className="badge badge-active">Активен</span> },
-                        { value: 'break', label: <span className="badge badge-warning">Перерыв</span> },
-                        { value: 'done', label: <span className="badge badge-done">Завершил</span> },
+                        { value: 'active', label: <span style={{ color: 'var(--status-active-text)' }}>Активен</span> },
+                        { value: 'break', label: <span style={{ color: 'var(--warning)' }}>Перерыв</span> },
+                        { value: 'done', label: <span style={{ color: 'var(--status-done-text)' }}>Завершил</span> },
                       ]}
                     />
                   </td>
                   <td>
                     <Select
                       value={doc.room}
-                      style={{ width: 120 }}
+                      style={{ width: 130, height: 32 }}
                       onChange={(val) => handleUpdate(doc.id, 'room', val)}
                       options={[
                         { value: '101', label: 'Каб. 101' },
