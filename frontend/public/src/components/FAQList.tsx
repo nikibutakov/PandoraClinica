@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 
 export interface FAQItemData {
   question: string;
@@ -13,12 +13,18 @@ export default function FAQList({ items }: { items: FAQItemData[] }) {
       {items.map((item, i) => {
         const isOpen = openIndex === i;
         return (
-          <div key={i} className={`faq-item ${isOpen ? 'active' : ''}`}>
-            <button className="faq-question" onClick={() => setOpenIndex(isOpen ? null : i)}>
+          <div key={i} className={`faq-item ${isOpen ? "active" : ""}`}>
+            <button
+              className="faq-question"
+              onClick={() => setOpenIndex(isOpen ? null : i)}
+            >
               {item.question}
-              <span className="faq-icon">{isOpen ? '−' : '+'}</span>
+              <span className="faq-icon">{isOpen ? "−" : "+"}</span>
             </button>
-            <div className="faq-answer" style={{ maxHeight: isOpen ? '200px' : '0' }}>
+            <div
+              className="faq-answer"
+              style={{ maxHeight: isOpen ? "200px" : "0" }}
+            >
               <div className="faq-answer-inner">{item.answer}</div>
             </div>
           </div>

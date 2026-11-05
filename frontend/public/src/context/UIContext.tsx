@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, useContext, useState, type ReactNode } from "react";
 
 interface UIContextType {
   isModalOpen: boolean;
@@ -19,7 +19,10 @@ export function UIProvider({ children }: { children: ReactNode }) {
     <UIContext.Provider
       value={{
         isModalOpen,
-        openModal: () => { setIsModalOpen(true); setIsMenuOpen(false); },
+        openModal: () => {
+          setIsModalOpen(true);
+          setIsMenuOpen(false);
+        },
         closeModal: () => setIsModalOpen(false),
         isMenuOpen,
         openMenu: () => setIsMenuOpen(true),
@@ -33,6 +36,6 @@ export function UIProvider({ children }: { children: ReactNode }) {
 
 export function useUI() {
   const ctx = useContext(UIContext);
-  if (!ctx) throw new Error('useUI must be used within UIProvider');
+  if (!ctx) throw new Error("useUI must be used within UIProvider");
   return ctx;
 }

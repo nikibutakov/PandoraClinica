@@ -1,17 +1,17 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ConfigProvider } from 'antd';
-import ruRU from 'antd/locale/ru_RU';
-import { UIProvider } from './context/UIContext';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { ConfigProvider } from "antd";
+import ruRU from "antd/locale/ru_RU";
+import { UIProvider } from "./context/UIContext";
 
-import Header from './components/Header';
-import SideMenu from './components/SideMenu';
-import Footer from './components/Footer';
-import BookingModal from './components/BookingModal';
+import Header from "./components/Header";
+import SideMenu from "./components/SideMenu";
+import Footer from "./components/Footer";
+import BookingModal from "./components/BookingModal";
 
-import Home from './pages/Home';
-import About from './pages/About';
-import Services from './pages/Services';
-import Schedule from './pages/Schedule';
+import Home from "./pages/Home";
+import About from "./pages/About";
+import Services from "./pages/Services";
+import Schedule from "./pages/Schedule";
 
 function App() {
   return (
@@ -19,7 +19,7 @@ function App() {
       locale={ruRU}
       theme={{
         token: {
-          colorPrimary: '#0F8B78',
+          colorPrimary: "#0F8B78",
           fontFamily: "'Inter', sans-serif",
           borderRadius: 8,
         },

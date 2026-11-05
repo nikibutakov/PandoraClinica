@@ -1,12 +1,12 @@
-import { useEffect, useRef, type ReactNode, type CSSProperties } from 'react';
+import { useEffect, useRef, type ReactNode, type CSSProperties } from "react";
 
-export default function Reveal({ 
-  children, 
-  className = '', 
-  style 
-}: { 
-  children: ReactNode; 
-  className?: string; 
+export default function Reveal({
+  children,
+  className = "",
+  style,
+}: {
+  children: ReactNode;
+  className?: string;
   style?: CSSProperties;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -19,17 +19,21 @@ export default function Reveal({
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            entry.target.classList.add('active');
+            entry.target.classList.add("active");
             observer.unobserve(entry.target);
           }
         });
       },
-      { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
+      { threshold: 0.1, rootMargin: "0px 0px -50px 0px" },
     );
 
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
 
-  return <div ref={ref} className={`reveal ${className}`.trim()} style={style}>{children}</div>;
+  return (
+    <div ref={ref} className={`reveal ${className}`.trim()} style={style}>
+      {children}
+    </div>
+  );
 }
