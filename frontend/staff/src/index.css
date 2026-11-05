@@ -205,3 +205,17 @@ input, select, textarea { font-family: inherit; }
     .main-content { margin-left: 0; width: 100%; }
     .dashboard-split, .patient-layout, .record-layout { grid-template-columns: 1fr; }
 }
+/* Замените старый .info-row на этот */
+.info-row { 
+  display: flex; 
+  gap: 16px; /* Добавили отступ между текстом */
+  align-items: center;
+  padding: 6px 0; 
+  border-bottom: 1px dashed var(--border); 
+  font-size: 0.8rem; 
+}
+/* Фиксируем ширину для первой метки, чтобы значения были ровно друг под другом */
+.info-row > span:first-child {
+  width: 60px; 
+  flex-shrink: 0;
+}

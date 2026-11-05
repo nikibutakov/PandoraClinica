@@ -23,7 +23,6 @@ import RegReferrals from './pages/registrar/RegReferrals';
 // Doctor Pages
 import DocMyDay from './pages/doctor/DocMyDay';
 import DocRecord from './pages/doctor/DocRecord';
-import DocRecords from './pages/doctor/DocRecords'; // НОВЫЙ ИМПОРТ
 
 // Защита роутов
 function ProtectedRoute() {
@@ -56,7 +55,6 @@ function AppRoutes() {
 
           {/* Врач */}
           <Route path="doc/myday" element={<DocMyDay />} />
-          <Route path="doc/records" element={<DocRecords />} /> {/* НОВЫЙ МАРШРУТ */}
           <Route path="doc/record" element={<DocRecord />} />
         </Route>
       </Route>

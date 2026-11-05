@@ -49,7 +49,7 @@ export default function DocRecord() {
         </div>
 
         {/* Правая колонка с вкладками */}
-        <div className="card" style={{ padding: 0, display: 'flex', flexDirection: 'column' }}>
+        <div className="card" style={{ padding: 0, display: 'flex', flexDirection: 'column', minHeight: '550px' }}>
           
           {/* Кастомные вкладки */}
           <div className="tabs">
@@ -73,7 +73,7 @@ export default function DocRecord() {
             </div>
           </div>
 
-          {/* Контент вкладок */}
+          {/* Контент вкладок (flexGrow: 1 выталкивает панель кнопок вниз) */}
           <div style={{ padding: 16, flexGrow: 1 }}>
             
             {/* Вкладка: Карта */}
@@ -113,7 +113,15 @@ export default function DocRecord() {
             {activeTab === 'docs' && (
               <div>
                 <h4 className="font-semibold text-dark mb-3">Документы</h4>
-                <div className="flex justify-between items-center p-2" style={{ border: '1px solid var(--border)', borderRadius: 6 }}>
+                <div 
+                  className="flex justify-between items-center" 
+                  style={{ 
+                    border: '1px solid var(--border)', 
+                    borderRadius: 6, 
+                    padding: '12px 16px',
+                    background: 'var(--white)' // Убрали серый фон
+                  }}
+                >
                   <div className="text-sm font-medium text-dark">Анализы_крови.pdf</div>
                   <button className="btn btn-outline btn-sm">Скачать</button>
                 </div>
@@ -122,14 +130,22 @@ export default function DocRecord() {
 
           </div>
 
-          {/* Нижняя панель с кнопками действий */}
-          <div className="flex justify-between items-center p-4" style={{ borderTop: '1px solid var(--border)', background: '#FAFAFA', borderRadius: '0 0 10px 10px' }}>
+          {/* Нижняя панель с кнопками действий (всегда внизу) */}
+          <div 
+            className="flex justify-between items-center p-4" 
+            style={{ 
+              borderTop: '1px solid var(--border)', 
+              background: '#FAFAFA', 
+              borderRadius: '0 0 10px 10px' 
+            }}
+          >
             <button className="btn btn-outline" onClick={() => setIsReferralOpen(true)}>Направление</button>
             <div className="flex gap-2">
               <button className="btn btn-outline">Черновик</button>
               <button className="btn btn-primary">Завершить</button>
             </div>
           </div>
+          
         </div>
       </div>
 

@@ -19,7 +19,7 @@ const menus = {
   ],
   doctor: [
     { path: '/staff/doc/myday', label: 'Мой день', icon: '📋' },
-    { path: '/staff/doc/records', label: 'Мед. карты', icon: '📁' }, // НОВЫЙ ПУНКТ
+    { path: '/staff/doc/record', label: 'Приём', icon: '📄' }, // Вкладка Приём
   ]
 };
 
