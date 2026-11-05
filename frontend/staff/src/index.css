@@ -219,3 +219,38 @@ input, select, textarea { font-family: inherit; }
   width: 60px; 
   flex-shrink: 0;
 }
+/* ========================================= */
+/* АНИМАЦИЯ СКРЫТИЯ БОКОВОГО МЕНЮ            */
+/* ========================================= */
+
+.sidebar {
+    transition: transform 0.3s ease;
+}
+
+.sidebar.closed {
+    transform: translateX(-100%);
+}
+
+.main-content {
+    transition: margin-left 0.3s ease, width 0.3s ease;
+}
+
+.main-content.expanded {
+    margin-left: 0;
+    width: 100%;
+}
+
+/* Кнопка меню всегда видима */
+.menu-toggle {
+    display: block !important;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: var(--dark);
+    cursor: pointer;
+    margin-right: 16px;
+    transition: var(--transition);
+}
+.menu-toggle:hover {
+    color: var(--primary);
+}
