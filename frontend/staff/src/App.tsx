@@ -18,6 +18,7 @@ import Login from "./pages/Login";
 import Morning from "./pages/Morning";
 import MyDay from "./pages/MyDay";
 import Stub from "./pages/Stub";
+import Visit from "./pages/Visit";
 
 /** «/» отправляет на домашнюю страницу по роли вошедшего. */
 function Home() {
@@ -75,7 +76,7 @@ export default function App() {
           }
         >
           <Route path="/my-day" element={<MyDay />} />
-          <Route path="/visit" element={<Stub title="Приём" plan="E6" />} />
+          <Route path="/visit" element={<Visit />} />
         </Route>
 
         <Route
