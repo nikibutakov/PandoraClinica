@@ -1,108 +1,89 @@
-/** Маршруты внутреннего приложения: вход, редирект по роли, разделы с guard'ами. */
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { ConfigProvider } from 'antd';
+import ruRU from 'antd/locale/ru_RU';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import Layout from './components/Layout';
 
-import { useEffect } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+// Auth
+import Login from './pages/Login';
 
-import {
-  homePathByRole,
-  RequireRole,
-  setOnUnauthorized,
-  useAuth,
-  useAuthActions,
-} from "@pandora/shared";
+// Admin Pages
+import AdminStaff from './pages/admin/AdminStaff';
+import AdminDirs from './pages/admin/AdminDirs';
+import AdminDoctors from './pages/admin/AdminDoctors';
+import AdminSlots from './pages/admin/AdminSlots';
+import AdminExports from './pages/admin/AdminExports';
 
-import StaffLayout from "./layout/StaffLayout";
-import Login from "./pages/Login";
-import Stub from "./pages/Stub";
+// Registrar Pages
+import RegShift from './pages/registrar/RegShift';
+import RegPatients from './pages/registrar/RegPatients';
+import RegBooking from './pages/registrar/RegBooking';
+import RegReferrals from './pages/registrar/RegReferrals';
 
-/** «/» отправляет на домашнюю страницу по роли вошедшего. */
-function Home() {
-  const user = useAuth();
-  if (!user) return <Navigate to="/login" replace />;
-  return <Navigate to={homePathByRole(user.role)} replace />;
+// Doctor Pages
+import DocMyDay from './pages/doctor/DocMyDay';
+import DocRecord from './pages/doctor/DocRecord';
+
+// Защита роутов
+function ProtectedRoute() {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) return <Navigate to="/staff/login" replace />;
+  return <Outlet />;
 }
 
-/** Подписка на 401 от API: разлогин и переход на страницу входа. */
-function UnauthorizedWatchdog() {
-  const { logout } = useAuthActions();
-  useEffect(() => {
-    setOnUnauthorized(() => {
-      logout();
-      window.location.assign("/login");
-    });
-  }, [logout]);
-  return null;
-}
-
-export default function App() {
+function AppRoutes() {
   return (
-    <>
-      <UnauthorizedWatchdog />
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/" element={<Home />} />
+    <Routes>
+      <Route path="/staff/login" element={<Login />} />
+      
+      <Route element={<ProtectedRoute />}>
+        <Route path="/staff" element={<Layout />}>
+          <Route index element={<Navigate to="admin/staff" replace />} />
+          
+          {/* Админ */}
+          <Route path="admin/staff" element={<AdminStaff />} />
+          <Route path="admin/dirs" element={<AdminDirs />} />
+          <Route path="admin/doctors" element={<AdminDoctors />} />
+          <Route path="admin/slots" element={<AdminSlots />} />
+          <Route path="admin/exports" element={<AdminExports />} />
 
-        <Route
-          element={
-            <RequireRole roles={["registrar"]}>
-              <StaffLayout />
-            </RequireRole>
-          }
-        >
-          <Route
-            path="/morning"
-            element={<Stub title="Утро и кабинеты" plan="E1" />}
-          />
-          <Route
-            path="/patients"
-            element={<Stub title="Пациенты" plan="E2" />}
-          />
-          <Route
-            path="/appointments"
-            element={<Stub title="Запись и талоны" plan="E3" />}
-          />
-          <Route
-            path="/referrals"
-            element={<Stub title="Направления и перезвоны" plan="E4" />}
-          />
+          {/* Регистратор */}
+          <Route path="reg/shift" element={<RegShift />} />
+          <Route path="reg/patients" element={<RegPatients />} />
+          <Route path="reg/booking" element={<RegBooking />} />
+          <Route path="reg/referrals" element={<RegReferrals />} />
+
+          {/* Врач */}
+          <Route path="doc/myday" element={<DocMyDay />} />
+          <Route path="doc/record" element={<DocRecord />} />
         </Route>
-
-        <Route
-          element={
-            <RequireRole roles={["doctor"]}>
-              <StaffLayout />
-            </RequireRole>
-          }
-        >
-          <Route path="/my-day" element={<Stub title="Мой день" plan="E5" />} />
-          <Route path="/visit" element={<Stub title="Приём" plan="E6" />} />
-        </Route>
-
-        <Route
-          element={
-            <RequireRole roles={["admin"]}>
-              <StaffLayout />
-            </RequireRole>
-          }
-        >
-          <Route path="/staff" element={<Stub title="Персонал" plan="E8" />} />
-          <Route
-            path="/directories"
-            element={<Stub title="Справочники" plan="E9" />}
-          />
-          <Route
-            path="/doctors"
-            element={<Stub title="Врачи и график" plan="E10" />}
-          />
-          <Route path="/slots" element={<Stub title="Слоты" plan="E11" />} />
-          <Route
-            path="/exports"
-            element={<Stub title="Выгрузки" plan="E12" />}
-          />
-        </Route>
-
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </>
+      </Route>
+      
+      <Route path="*" element={<Navigate to="/staff/login" replace />} />
+    </Routes>
   );
 }
+
+function App() {
+  return (
+    <ConfigProvider
+      locale={ruRU}
+      theme={{ 
+        token: { 
+          colorPrimary: '#0F8B78', 
+          fontFamily: "'Inter', sans-serif", 
+          borderRadius: 6,
+          colorText: '#374151',
+        } 
+      }}
+    >
+      <AuthProvider>
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </AuthProvider>
+    </ConfigProvider>
+  );
+}
+
+export default App;

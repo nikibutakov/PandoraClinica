@@ -1,89 +1,66 @@
-/** Страница входа: AntD Form, ошибки бэка по-русски, редирект по роли через «/». */
-
-import { Alert, Button, Card, Flex, Form, Input, Typography } from "antd";
-import { useState } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
-
-import { useAuth, useAuthActions } from "@pandora/shared";
-
-interface LoginForm {
-  login: string;
-  password: string;
-}
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth, type Role } from '../context/AuthContext';
 
 export default function Login() {
-  const { login } = useAuthActions();
-  const user = useAuth();
+  const [selectedRole, setSelectedRole] = useState<Role>('admin');
+  const { login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  if (user) return <Navigate to="/" replace />;
-
-  const onFinish = async (values: LoginForm) => {
-    setLoading(true);
-    setError("");
-    try {
-      await login(values.login, values.password);
-      const from = (location.state as { from?: { pathname?: string } } | null)
-        ?.from?.pathname;
-      navigate(from && from !== "/login" ? from : "/", { replace: true });
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Не удалось войти");
-    } finally {
-      setLoading(false);
-    }
+  const handleLogin = () => {
+    login(selectedRole);
+    if (selectedRole === 'admin') navigate('/staff/admin/staff');
+    else if (selectedRole === 'doctor') navigate('/staff/doc/myday');
+    else navigate('/staff/reg/shift');
   };
 
   return (
-    <Flex
-      align="center"
-      justify="center"
-      style={{ minHeight: "100vh", background: "#f5f5f5" }}
-    >
-      <Card style={{ width: 380 }}>
-        <Typography.Title
-          level={3}
-          style={{ textAlign: "center", marginTop: 0 }}
-        >
-          Пандора · Клиника
-        </Typography.Title>
-        <Typography.Paragraph type="secondary" style={{ textAlign: "center" }}>
-          Вход для персонала
-        </Typography.Paragraph>
-        {error && (
-          <Alert
-            type="error"
-            message={error}
-            showIcon
-            style={{ marginBottom: 16 }}
-          />
-        )}
-        <Form<LoginForm>
-          layout="vertical"
-          onFinish={onFinish}
-          requiredMark={false}
-        >
-          <Form.Item
-            name="login"
-            label="Логин"
-            rules={[{ required: true, message: "Введите логин" }]}
-          >
-            <Input autoComplete="username" autoFocus />
-          </Form.Item>
-          <Form.Item
-            name="password"
-            label="Пароль"
-            rules={[{ required: true, message: "Введите пароль" }]}
-          >
-            <Input.Password autoComplete="current-password" />
-          </Form.Item>
-          <Button type="primary" htmlType="submit" block loading={loading}>
-            Войти
-          </Button>
-        </Form>
-      </Card>
-    </Flex>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'var(--primary-bg)', position: 'relative' }}>
+      <div style={{ position: 'absolute', top: 24, left: 24, display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div className="avatar" style={{ background: 'var(--primary)', color: 'white', borderRadius: 6, width: 28, height: 28 }}>+</div>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--dark)' }}>pandora</div>
+          <div style={{ fontSize: '0.55rem', letterSpacing: 1, color: 'var(--text-muted)' }}>ПОЛИКЛИНИКА</div>
+        </div>
+      </div>
+
+      <div style={{ background: 'var(--white)', padding: 32, borderRadius: 16, width: '100%', maxWidth: 400, boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
+        <h1 style={{ fontSize: '1.5rem', marginBottom: 6, color: 'var(--dark)' }}>С возвращением.</h1>
+        <p className="text-muted" style={{ marginBottom: 20, fontSize: '0.85rem' }}>Войдите в рабочее пространство.</p>
+
+        <div className="input-group">
+          <label>Выберите роль</label>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', background: 'var(--bg-body)', padding: 4, borderRadius: 6, marginBottom: 20 }}>
+            {(['registrar', 'doctor', 'admin'] as Role[]).map((r) => (
+              <button
+                key={r}
+                onClick={() => setSelectedRole(r)}
+                style={{
+                  padding: 8, textAlign: 'center', fontSize: '0.85rem', fontWeight: 500,
+                  color: selectedRole === r ? 'var(--primary)' : 'var(--text-muted)',
+                  background: selectedRole === r ? 'var(--white)' : 'transparent',
+                  borderRadius: 4, boxShadow: selectedRole === r ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+                }}
+              >
+                {r === 'registrar' ? 'Регистратор' : r === 'doctor' ? 'Врач' : 'Админ'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="input-group">
+          <label>Email</label>
+          <input type="email" className="input-field" defaultValue="admin@pandora.clinic" />
+        </div>
+        <div className="input-group">
+          <label>Пароль</label>
+          <input type="password" className="input-field" defaultValue="............" />
+        </div>
+
+        <button className="btn btn-primary" style={{ width: '100%', padding: 10, fontSize: '0.9rem', marginTop: 8 }} onClick={handleLogin}>
+          Войти
+        </button>
+      </div>
+    </div>
   );
 }
