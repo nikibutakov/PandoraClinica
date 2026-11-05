@@ -17,6 +17,7 @@ import Board from "./pages/Board";
 import Login from "./pages/Login";
 import Morning from "./pages/Morning";
 import MyDay from "./pages/MyDay";
+import Patients from "./pages/Patients";
 import Stub from "./pages/Stub";
 import Visit from "./pages/Visit";
 
@@ -57,10 +58,7 @@ export default function App() {
           }
         >
           <Route path="/morning" element={<Morning />} />
-          <Route
-            path="/patients"
-            element={<Stub title="Пациенты" plan="E2" />}
-          />
+          <Route path="/patients" element={<Patients />} />
           <Route path="/appointments" element={<Appointments />} />
           <Route
             path="/referrals"
