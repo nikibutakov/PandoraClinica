@@ -1,8 +1,12 @@
-/** Табло очереди для ТВ: тёмный киоск-режим, без авторизации (экран E7 плана). */
+/**
+ * Табло очереди для ТВ (экран E7): тёмный киоск-режим без авторизации.
+ * Решение команды: табло — часть внутреннего приложения (staff).
+ * Доступ ограничивается на уровне сети/nginx (D2), не логином.
+ * Живые данные подключаются на экране E7 из GET /api/board.
+ */
 
 import { ConfigProvider, Flex, Typography } from "antd";
 import { theme } from "antd";
-import { Link } from "react-router-dom";
 
 export default function Board() {
   return (
@@ -22,9 +26,6 @@ export default function Board() {
         >
           Кабинеты, принимающие врачи и вызываемые номера появятся здесь (E7)
         </Typography.Text>
-        <Link to="/" style={{ color: "rgba(255,255,255,0.45)", fontSize: 16 }}>
-          ← На сайт клиники
-        </Link>
       </Flex>
     </ConfigProvider>
   );

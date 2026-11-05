@@ -1,21 +1,11 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
-import { App as AntApp, ConfigProvider } from "antd";
-import ruRU from "antd/locale/ru_RU";
-
-import "@ant-design/v5-patch-for-react-19";
-
+import "@ant-design/v5-patch-for-react-19"; // Обязательный патч для React 19
 import App from "./App";
+import "./index.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ConfigProvider locale={ruRU}>
-      <AntApp>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
-      </AntApp>
-    </ConfigProvider>
+    <App />
   </StrictMode>,
 );

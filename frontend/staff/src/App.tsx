@@ -12,6 +12,7 @@ import {
 } from "@pandora/shared";
 
 import StaffLayout from "./layout/StaffLayout";
+import Board from "./pages/Board";
 import Login from "./pages/Login";
 import Stub from "./pages/Stub";
 
@@ -39,6 +40,8 @@ export default function App() {
     <>
       <UnauthorizedWatchdog />
       <Routes>
+        {/* Табло для ТВ — без авторизации: киоск в холле, доступ режет nginx (D2) */}
+        <Route path="/board" element={<Board />} />
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<Home />} />
 
