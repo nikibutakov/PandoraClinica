@@ -14,11 +14,14 @@ import {
 import StaffLayout from "./layout/StaffLayout";
 import Appointments from "./pages/Appointments";
 import Board from "./pages/Board";
+import DoctorsAdmin from "./pages/DoctorsAdmin";
+import Exports from "./pages/Exports";
 import Login from "./pages/Login";
 import Morning from "./pages/Morning";
 import MyDay from "./pages/MyDay";
 import Patients from "./pages/Patients";
 import Referrals from "./pages/Referrals";
+import SlotsAdmin from "./pages/SlotsAdmin";
 import Stub from "./pages/Stub";
 import Visit from "./pages/Visit";
 
@@ -87,15 +90,9 @@ export default function App() {
             path="/directories"
             element={<Stub title="Справочники" plan="E9" />}
           />
-          <Route
-            path="/doctors"
-            element={<Stub title="Врачи и график" plan="E10" />}
-          />
-          <Route path="/slots" element={<Stub title="Слоты" plan="E11" />} />
-          <Route
-            path="/exports"
-            element={<Stub title="Выгрузки" plan="E12" />}
-          />
+          <Route path="/doctors" element={<DoctorsAdmin />} />
+          <Route path="/slots" element={<SlotsAdmin />} />
+          <Route path="/exports" element={<Exports />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
