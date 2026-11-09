@@ -26,7 +26,7 @@ export default function About() {
           </div>
           <div className="about-split-img">
             <img
-              src="https://images.unsplash.com/photo-1629909613654-28e377c37b09?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+              src="https://avatars.mds.yandex.net/get-altay/5583647/2a0000017e76fa3c640deca34dd28dc0e265/XXXL"
               alt="Интерьер клиники"
             />
           </div>

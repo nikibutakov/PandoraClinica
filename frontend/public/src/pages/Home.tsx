@@ -72,7 +72,7 @@ export default function Home() {
           </div>
           <div className="hero-image">
             <img
-              src="https://images.unsplash.com/photo-1579684385127-1ef15d508118?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+              src="https://avatars.mds.yandex.net/i?id=c2feb47ae0e9b7c8137f39c800ef6dc4b2ee4042-16513077-images-thumbs&n=13"
               alt="Врачи"
             />
             <div className="floating-card">
@@ -301,7 +301,7 @@ export default function Home() {
         <Reveal className="container about-split">
           <div className="about-split-img">
             <img
-              src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+              src="https://pandorapromed.ru/media/post_previews/%D0%9A%D0%B8%D1%80%D0%BE%D0%B2%D0%B02.jpg"
               alt="Клиника"
             />
           </div>
