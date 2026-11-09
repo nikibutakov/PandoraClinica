@@ -3,7 +3,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
+from sqlalchemy import text
 
+from app.database import engine
 from app.routers import admin, auth, board, doctor, public, registrar
 
 TAGS = [
@@ -64,10 +66,6 @@ app.add_middleware(
 def healthz() -> dict:
     # Проверяем не только процесс, но и БД: healthcheck compose использует
     # этот эндпоинт, чтобы считать бэкенд готовым к приёму трафика
-    from sqlalchemy import text
-
-    from app.database import engine
-
     with engine.connect() as conn:
         conn.execute(text("SELECT 1"))
     return {"status": "ok"}
