@@ -13,7 +13,8 @@ export default defineConfig({
     port: 5173,
     proxy: {
       "/api": {
-        target: "http://localhost:8000",
+        // В docker-compose dev-окружения бэкенд — сервис backend, не localhost
+        target: process.env.PROXY_TARGET ?? "http://localhost:8000",
         changeOrigin: true,
       },
     },

@@ -62,6 +62,14 @@ app.add_middleware(
 
 @app.get("/healthz", tags=["Служебные"], summary="Проверка живости")
 def healthz() -> dict:
+    # Проверяем не только процесс, но и БД: healthcheck compose использует
+    # этот эндпоинт, чтобы считать бэкенд готовым к приёму трафика
+    from sqlalchemy import text
+
+    from app.database import engine
+
+    with engine.connect() as conn:
+        conn.execute(text("SELECT 1"))
     return {"status": "ok"}
 
 
