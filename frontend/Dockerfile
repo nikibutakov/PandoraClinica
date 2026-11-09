@@ -15,6 +15,8 @@ COPY shared/package.json ./shared/
 COPY staff/package.json ./staff/
 COPY public/package.json ./public/
 RUN npm ci
+# tsconfig.base.json нужен и dev: vite читает tsconfig при трансформации tsx
+COPY tsconfig.base.json ./
 EXPOSE 5173 5174
 # Оба dev-сервера с флагом --host, иначе vite слушает только localhost в контейнере
 CMD ["sh", "-c", "npm run dev -w @pandora/staff -- --host 0.0.0.0 & npm run dev -w @pandora/public -- --host 0.0.0.0 & wait"]
