@@ -27,6 +27,8 @@ COPY shared/package.json ./shared/
 COPY staff/package.json ./staff/
 COPY public/package.json ./public/
 RUN npm ci
+# tsconfig.base.json обязателен: tsconfig.json воркспейсов наследуются от него
+COPY tsconfig.base.json ./
 COPY shared ./shared
 COPY staff ./staff
 COPY public ./public
