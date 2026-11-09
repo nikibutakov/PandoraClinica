@@ -29,7 +29,7 @@ COPY alembic.ini ./
 COPY migrations ./migrations
 COPY app ./app
 RUN useradd --system --no-create-home pandora \
-    && chown -R pandora:/app
+    && chown -R pandora: /app
 USER pandora
 EXPOSE 8000
 # Миграции применяются перед стартом; DATABASE_URL берётся из окружения
