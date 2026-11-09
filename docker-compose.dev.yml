@@ -1,0 +1,97 @@
+# Dev-окружение. Используется и на машине разработчика, и на сервере как
+# тест-среда перед прод (проект pandora-dev, порты 5173/5174/8000/5432 —
+# не пересекаются с prod). Разработчики заходят на 5173/5174 сервера.
+#
+# Запуск:  docker compose -f docker-compose.dev.yml -p pandora-dev up -d --build
+# Сидинг:  docker compose -f docker-compose.dev.yml -p pandora-dev --profile seed run --rm seed
+#          (--demo: админ + регистратор + врачи, слоты, очередь; без --demo — только первый админ)
+# Сброс БД: docker compose -f docker-compose.dev.yml -p pandora-dev down -v
+#
+# Секреты: значения по умолчанию — заведомо слабые девовые, берутся из .env.dev
+# (--env-file). Для тест-среды на сервере можно переопределить POSTGRES_PASSWORD
+# своим .env.dev; для локальной разработки хватает коммитнутых значений.
+#
+# staff  → http://localhost:5173
+# public → http://localhost:5174
+# API    → http://localhost:8000/docs
+# БД     → localhost:5432 (pandora / pandora, для DBeaver)
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: pandora
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pandora}
+      POSTGRES_DB: pandora_clinic
+    ports:
+      - "5432:5432"
+    volumes:
+      - pandora_dev_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pandora -d pandora_clinic"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      target: dev
+    environment:
+      DATABASE_URL: postgresql+psycopg2://pandora:${POSTGRES_PASSWORD:-pandora}@db:5432/pandora_clinic
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-please-override-with-env-secret-key}
+      clinic_timezone: Europe/Moscow
+    ports:
+      - "8000:8000"
+    volumes:
+      # Код монтируется — uvicorn --reload подхватывает правки
+      - ./backend/app:/app/app
+      - ./backend/migrations:/app/migrations
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      target: dev
+    environment:
+      PROXY_TARGET: http://backend:8000
+    ports:
+      - "5173:5173"
+      - "5174:5174"
+    volumes:
+      # Код монтируется, HMR работает
+      - ./frontend/shared:/app/shared
+      - ./frontend/staff:/app/staff
+      - ./frontend/public:/app/public
+      # Анонимный volume сохраняет node_modules из образа
+      - /app/node_modules
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  # Разовый сервис наполнения базы (python -m app.seed). Запускается по
+  # запросу через --profile seed, в обычном up не участвует.
+  seed:
+    build:
+      context: ./backend
+      target: dev
+    profiles: ["seed"]
+    command: ["python", "-m", "app.seed", "--demo"]
+    environment:
+      DATABASE_URL: postgresql+psycopg2://pandora:${POSTGRES_PASSWORD:-pandora}@db:5432/pandora_clinic
+    volumes:
+      - ./backend/app:/app/app
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pandora_dev_pgdata:

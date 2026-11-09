@@ -5,3 +5,5 @@ __pycache__/
 
 # Локальное окружение и данные
 .env
+.env.dev
+.env.prod

@@ -1,0 +1,74 @@
+# Prod-окружение для одной ВМ. От dev отличается портами (8080/8081, чтобы
+# окружения жили на одной машине одновременно), зашитым в образ кодом,
+# обязательными секретами, отсутствием наружу БД и API.
+#
+# Первый запуск:
+#   cp .env.prod.example .env.prod   # вписать SECRET_KEY и POSTGRES_PASSWORD
+#   docker compose -f docker-compose.prod.yml -p pandora-prod --env-file .env.prod up -d --build
+# Первый вход — создать администратора (только учётка, без демо-данных):
+#   docker compose -f docker-compose.prod.yml -p pandora-prod --env-file .env.prod \
+#     run --rm backend python -m app.seed admin <надёжный-пароль>
+#
+# staff  → http://<vm>:8080
+# public → http://<vm>:8081  (внешний сайт + табло /board)
+# API наружу не торчит — только через /api внутри фронтов; БД не опубликована.
+#
+# Проверки: у db, backend и frontend healthcheck-и; frontend стартует только
+# после того, как бэкенд прошёл /healthz (там проверяется и соединение с БД).
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pandora
+      # Без заданного пароля compose упадёт с ошибкой, а не заведёт слабую БД
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Задайте POSTGRES_PASSWORD в .env.prod}
+      POSTGRES_DB: pandora_clinic
+    volumes:
+      - pandora_prod_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pandora -d pandora_clinic"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      target: prod
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg2://pandora:${POSTGRES_PASSWORD}@db:5432/pandora_clinic
+      # JWT-секрет: compose упадёт с ошибкой, если не задан в .env.prod
+      SECRET_KEY: ${SECRET_KEY:?Задайте SECRET_KEY в .env.prod}
+      clinic_timezone: Europe/Moscow
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      target: prod
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+      - "8081:81"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:80/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  pandora_prod_pgdata:
