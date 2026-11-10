@@ -34,11 +34,11 @@ export function parseJwt(token: string): JwtPayload | null {
 export function homePathByRole(role: UserRole): string {
   switch (role) {
     case "doctor":
-      return "/my-day";
+      return "/staff/doc/myday";
     case "admin":
-      return "/staff";
+      return "/staff/admin/staff";
     default:
-      return "/morning";
+      return "/staff/reg/shift";
   }
 }
 

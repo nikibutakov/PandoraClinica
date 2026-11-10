@@ -17,7 +17,7 @@ export function RequireRole({
   const location = useLocation();
 
   if (!user) {
-    return <Navigate to="/login" replace state={{ from: location }} />;
+    return <Navigate to="/staff/login" replace state={{ from: location }} />;
   }
   if (roles && !roles.includes(user.role)) {
     return (
