@@ -1,173 +1,377 @@
-import { useState } from 'react';
-import { Modal } from 'antd';
-import { useNavigate } from 'react-router-dom';
+/**
+ * Приём врача (E6): выбор талона из очереди, медкарта (жалобы, анамнез,
+ * лечение), диагнозы по МКБ-10 (основной + сопутствующие), направление
+ * к специальности; завершение приёма.
+ */
+
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { App, Form, Input, Modal, Select } from 'antd';
+
+import { api, formatApiError } from '@pandora/shared';
+import type { components } from '@pandora/shared';
+
+type QueueItemOut = components['schemas']['QueueItemOut'];
+type SpecializationOut = components['schemas']['SpecializationOut'];
+
+interface DiagnosisRow {
+  code: string;
+  name: string;
+}
 
 export default function DocRecord() {
+  const { message } = App.useApp();
   const navigate = useNavigate();
-  
-  // Состояние для активной вкладки
-  const [activeTab, setActiveTab] = useState<'karta' | 'history' | 'docs'>('karta');
-  
-  // Состояние для модального окна направления
-  const [isReferralOpen, setIsReferralOpen] = useState(false);
+  const [searchParams] = useSearchParams();
+
+  const [queue, setQueue] = useState<QueueItemOut[]>([]);
+  const [specializations, setSpecializations] = useState<SpecializationOut[]>([]);
+  const [ticketId, setTicketId] = useState<number | null>(
+    Number(searchParams.get('ticket')) || null,
+  );
+  const [diagnoses, setDiagnoses] = useState<DiagnosisRow[]>([]);
+  const [primaryIndex, setPrimaryIndex] = useState(0);
+  // модалка направления открыта
+  const [referralOpen, setReferralOpen] = useState(false);
+  // направление будет выдано вместе с завершением приёма
+  const [withReferral, setWithReferral] = useState(false);
+  const [referralSpecId, setReferralSpecId] = useState<number | null>(null);
+  const [referralReason, setReferralReason] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const [form] = Form.useForm();
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const [{ data: queueData, error: qError, response: qResponse }, { data: specs }] =
+        await Promise.all([
+          api.GET('/api/doctor/queue'),
+          api.GET('/api/public/specializations'),
+        ]);
+      if (cancelled) return;
+      if (queueData) {
+        setQueue(queueData);
+        setError('');
+      } else {
+        setError(formatApiError(qError, qResponse.status));
+      }
+      setSpecializations(specs ?? []);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const ticket = useMemo(
+    () => queue.find((t) => t.id === ticketId) ?? null,
+    [queue, ticketId],
+  );
+
+  const openTickets = queue.filter(
+    (t) => t.status === 'waiting' || t.status === 'called' || t.status === 'in_progress',
+  );
+
+  const finish = async () => {
+    if (ticketId === null) {
+      message.warning('Выберите талон');
+      return;
+    }
+    if (diagnoses.length === 0) {
+      message.warning('Добавьте хотя бы один диагноз по МКБ-10');
+      return;
+    }
+    if (diagnoses.some((d) => !d.code.trim() || !d.name.trim())) {
+      message.warning('У каждого диагноза должны быть код и название');
+      return;
+    }
+    if (withReferral && referralSpecId === null) {
+      message.warning('Выберите специальность направления');
+      return;
+    }
+    const values = await form.validateFields();
+    setSaving(true);
+    const { data, error: errBody, response } = await api.POST('/api/doctor/visits', {
+      body: {
+        ticket_id: ticketId,
+        complaints: values.complaints ?? null,
+        anamnesis: values.anamnesis ?? null,
+        treatment: values.treatment ?? null,
+        diagnoses: diagnoses.map((d, i) => ({
+          code: d.code.trim(),
+          name: d.name.trim(),
+          is_primary: i === primaryIndex,
+        })),
+        referral:
+          withReferral && referralSpecId !== null
+            ? {
+                to_specialization_id: referralSpecId,
+                reason: referralReason.trim() || null,
+              }
+            : null,
+      },
+    });
+    setSaving(false);
+    if (data) {
+      message.success('Приём завершён, запись в медкарте создана');
+      if (withReferral) {
+        message.info('Направление передано в регистратуру');
+      }
+      navigate('/staff/doc/myday');
+    } else {
+      message.error(formatApiError(errBody, response.status));
+    }
+  };
+
+  if (error) return <div className="view"><p className="text-danger text-sm">{error}</p></div>;
 
   return (
     <div className="view">
       <div className="page-header">
         <div>
           <h1 className="page-title">Приём / Медицинская карта</h1>
-          <p className="page-subtitle">Пациент: Анна Смирнова · Терапия</p>
+          <p className="page-subtitle">
+            {ticket
+              ? `Талон №${ticket.number} · ${ticket.patient_name ?? 'пациент не опознан'}`
+              : 'Выберите талон из очереди'}
+          </p>
         </div>
         <button className="btn btn-outline" onClick={() => navigate('/staff/doc/myday')}>Назад</button>
       </div>
-      
+
       <div className="record-layout">
-        {/* Левая колонка с информацией о пациенте */}
+        {/* Левая колонка: талон и пациент */}
         <div className="flex flex-col gap-4">
           <div className="card">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="avatar" style={{ width: 40, height: 40, fontSize: '1rem' }}>АС</div>
-              <div>
-                <div className="font-bold text-dark" style={{ fontSize: '1rem' }}>Анна Смирнова</div>
-                <div className="text-xs text-muted">42 года · Ж</div>
+            <div className="input-group">
+              <label>Талон (ожидающий, вызванный или на приёме)</label>
+              <Select
+                style={{ width: '100%' }}
+                placeholder="Талон"
+                value={ticketId}
+                onChange={setTicketId}
+                options={openTickets.map((t) => ({
+                  value: t.id,
+                  label: `№${t.number} · ${t.patient_name ?? 'пациент'}${
+                    t.status === 'called' ? ' · вызван' : t.status === 'in_progress' ? ' · на приёме' : ''
+                  }`,
+                }))}
+              />
+            </div>
+            {ticket && (
+              <>
+                <div className="info-row">
+                  <span className="text-muted">Талон</span>
+                  <span className="font-medium">№{ticket.number}</span>
+                </div>
+                <div className="info-row">
+                  <span className="text-muted">Пациент</span>
+                  <span className="font-medium">{ticket.patient_name ?? '—'}</span>
+                </div>
+                <div className="info-row">
+                  <span className="text-muted">Запись на</span>
+                  <span className="font-medium">
+                    {ticket.appointment_starts_at
+                      ? `${dayjsLocal(ticket.appointment_starts_at)} (по записи)`
+                      : 'живая очередь'}
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
+
+          {withReferral && (
+            <div className="card">
+              <div className="flex justify-between items-center mb-2">
+                <h4 className="font-semibold text-dark text-sm" style={{ margin: 0 }}>
+                  Направление будет выдано
+                </h4>
+                <button className="btn btn-outline btn-sm" onClick={() => setWithReferral(false)}>
+                  Отменить
+                </button>
               </div>
+              <div className="text-sm text-dark">
+                К специальности: {specializations.find((s) => s.id === referralSpecId)?.name ?? '— не выбрана'}
+              </div>
+              {referralReason.trim() && (
+                <div className="text-xs text-muted mt-1">Причина: {referralReason.trim()}</div>
+              )}
             </div>
-            <div className="info-row">
-              <span className="text-muted">СНИЛС</span>
-              <span className="font-medium">245-803-716 00</span>
-            </div>
-            <div className="info-row">
-              <span className="text-muted">Телефон</span>
-              <span className="font-medium">+7 (913) 555-01-44</span>
-            </div>
-          </div>
-          
-          <div className="card">
-            <h4 className="font-semibold text-dark mb-2 text-sm">Аллергии</h4>
-            <p className="text-sm text-dark mb-2">Нет известных.</p>
-          </div>
+          )}
         </div>
 
-        {/* Правая колонка с вкладками */}
+        {/* Правая колонка: медкарта */}
         <div className="card" style={{ padding: 0, display: 'flex', flexDirection: 'column', minHeight: '550px' }}>
-          
-          {/* Кастомные вкладки */}
           <div className="tabs">
-            <div 
-              className={`tab ${activeTab === 'karta' ? 'active' : ''}`} 
-              onClick={() => setActiveTab('karta')}
-            >
-              Карта
-            </div>
-            <div 
-              className={`tab ${activeTab === 'history' ? 'active' : ''}`} 
-              onClick={() => setActiveTab('history')}
+            <div className="tab active">Карта</div>
+            <div
+              className="tab"
+              title="История приёмов появится позже"
+              onClick={() => message.info('История приёмов пока не отображается — раздел в разработке')}
             >
               История
             </div>
-            <div 
-              className={`tab ${activeTab === 'docs' ? 'active' : ''}`} 
-              onClick={() => setActiveTab('docs')}
+            <div
+              className="tab"
+              title="Документы появятся позже"
+              onClick={() => message.info('Документы пока не загружаются — раздел в разработке')}
             >
               Документы
             </div>
           </div>
 
-          {/* Контент вкладок (flexGrow: 1 выталкивает панель кнопок вниз) */}
           <div style={{ padding: 16, flexGrow: 1 }}>
-            
-            {/* Вкладка: Карта */}
-            {activeTab === 'karta' && (
-              <div>
-                <div className="mb-4">
-                  <label className="font-medium text-dark text-sm mb-1" style={{ display: 'block' }}>Жалобы</label>
-                  <textarea className="input-field" rows={3} defaultValue="Головная боль в течение 3 дней."></textarea>
-                </div>
-                <div className="mb-4">
-                  <label className="font-medium text-dark text-sm mb-1" style={{ display: 'block' }}>Основной диагноз (МКБ-10)</label>
-                  <input type="text" className="input-field" placeholder="Поиск..." defaultValue="R51.9 Головная боль" />
-                </div>
-                <div className="mb-4">
-                  <label className="font-medium text-dark text-sm mb-1" style={{ display: 'block' }}>Сопутствующий диагноз</label>
-                  <input type="text" className="input-field" placeholder="Поиск..." />
-                </div>
-                <div className="mb-4">
-                  <label className="font-medium text-dark text-sm mb-1" style={{ display: 'block' }}>Рекомендации</label>
-                  <textarea className="input-field" rows={3} defaultValue="Гидратация, режим сна."></textarea>
-                </div>
-              </div>
-            )}
+            <Form form={form} layout="vertical">
+              <Form.Item name="complaints" label="Жалобы" style={{ marginBottom: 16 }}>
+                <Input.TextArea rows={3} placeholder="Например: боль в груди при нагрузке" />
+              </Form.Item>
+              <Form.Item name="anamnesis" label="Анамнез" style={{ marginBottom: 16 }}>
+                <Input.TextArea rows={2} placeholder="Когда началось, чем лечился ранее" />
+              </Form.Item>
+              <Form.Item name="treatment" label="Лечение и рекомендации" style={{ marginBottom: 16 }}>
+                <Input.TextArea rows={3} placeholder="Назначения, рекомендации" />
+              </Form.Item>
+            </Form>
 
-            {/* Вкладка: История */}
-            {activeTab === 'history' && (
-              <div>
-                <h4 className="font-semibold text-dark mb-3">История визитов</h4>
-                <div style={{ borderLeft: '2px solid var(--primary)', paddingLeft: 16, marginBottom: 16 }}>
-                  <div className="text-xs text-muted font-medium mb-1">12 Мая 2026 · Терапия</div>
-                  <div className="text-sm font-medium text-dark">ОРВИ</div>
-                </div>
-              </div>
+            <div className="flex justify-between items-center mb-2 mt-4">
+              <h4 className="font-semibold text-dark text-sm" style={{ margin: 0 }}>
+                Диагнозы по МКБ-10
+              </h4>
+              <button
+                className="btn btn-outline btn-sm"
+                onClick={() => {
+                  setDiagnoses((prev) => [...prev, { code: '', name: '' }]);
+                  setPrimaryIndex(diagnoses.length);
+                }}
+              >
+                + Добавить диагноз
+              </button>
+            </div>
+            {diagnoses.length === 0 && (
+              <p className="text-sm text-muted">
+                Добавьте основной диагноз и при необходимости сопутствующие
+              </p>
             )}
-
-            {/* Вкладка: Документы */}
-            {activeTab === 'docs' && (
-              <div>
-                <h4 className="font-semibold text-dark mb-3">Документы</h4>
-                <div 
-                  className="flex justify-between items-center" 
-                  style={{ 
-                    border: '1px solid var(--border)', 
-                    borderRadius: 6, 
-                    padding: '12px 16px',
-                    background: 'var(--white)' // Убрали серый фон
+            {diagnoses.map((d, i) => (
+              <div key={i} className="flex gap-2 items-center mb-2 flex-wrap">
+                <label className="flex items-center gap-1 text-xs cursor-pointer">
+                  <input
+                    type="radio"
+                    name="primary-diagnosis"
+                    checked={primaryIndex === i}
+                    onChange={() => setPrimaryIndex(i)}
+                  />
+                  основной
+                </label>
+                <input
+                  type="text"
+                  className="input-field"
+                  style={{ width: 110 }}
+                  placeholder="Код"
+                  maxLength={10}
+                  value={d.code}
+                  onChange={(e) =>
+                    setDiagnoses((prev) =>
+                      prev.map((row, j) => (j === i ? { ...row, code: e.target.value } : row)),
+                    )
+                  }
+                />
+                <input
+                  type="text"
+                  className="input-field"
+                  style={{ flex: 1, minWidth: 240 }}
+                  placeholder="Название диагноза"
+                  value={d.name}
+                  onChange={(e) =>
+                    setDiagnoses((prev) =>
+                      prev.map((row, j) => (j === i ? { ...row, name: e.target.value } : row)),
+                    )
+                  }
+                />
+                <button
+                  className="btn btn-danger-outline btn-sm"
+                  onClick={() => {
+                    setDiagnoses((prev) => prev.filter((_, j) => j !== i));
+                    setPrimaryIndex((p) => (p >= diagnoses.length - 1 ? 0 : p));
                   }}
                 >
-                  <div className="text-sm font-medium text-dark">Анализы_крови.pdf</div>
-                  <button className="btn btn-outline btn-sm">Скачать</button>
-                </div>
+                  Удалить
+                </button>
               </div>
-            )}
-
+            ))}
           </div>
 
-          {/* Нижняя панель с кнопками действий (всегда внизу) */}
-          <div 
-            className="flex justify-between items-center p-4" 
-            style={{ 
-              borderTop: '1px solid var(--border)', 
-              background: '#FAFAFA', 
-              borderRadius: '0 0 10px 10px' 
-            }}
+          {/* Нижняя панель действий */}
+          <div
+            className="flex justify-between items-center p-4"
+            style={{ borderTop: '1px solid var(--border)', background: '#FAFAFA', borderRadius: '0 0 10px 10px' }}
           >
-            <button className="btn btn-outline" onClick={() => setIsReferralOpen(true)}>Направление</button>
+            <button
+              className="btn btn-outline"
+              disabled={ticketId === null}
+              onClick={() => setReferralOpen(true)}
+            >
+              Направление
+            </button>
             <div className="flex gap-2">
-              <button className="btn btn-outline">Черновик</button>
-              <button className="btn btn-primary">Завершить</button>
+              <button className="btn btn-outline" onClick={() => navigate('/staff/doc/myday')}>
+                Без завершения
+              </button>
+              <button className="btn btn-primary" disabled={saving || ticketId === null} onClick={() => void finish()}>
+                {saving ? 'Сохраняем…' : 'Завершить приём'}
+              </button>
             </div>
           </div>
-          
         </div>
       </div>
 
-      {/* Модальное окно для направления */}
-      <Modal 
-        title="Направление" 
-        open={isReferralOpen} 
-        onCancel={() => setIsReferralOpen(false)} 
-        onOk={() => setIsReferralOpen(false)} 
-        okText="Направить" 
+      {/* Модальное окно направления */}
+      <Modal
+        title="Направление к специальности"
+        open={referralOpen}
+        onCancel={() => setReferralOpen(false)}
+        onOk={() => {
+          if (referralSpecId === null) {
+            message.warning('Выберите специальность направления');
+            return;
+          }
+          setWithReferral(true);
+          setReferralOpen(false);
+        }}
+        okText="Приложить к приёму"
         cancelText="Отмена"
       >
         <div className="input-group mt-4">
-          <label>Специальность</label>
-          <select className="input-field">
-            <option value="">-- Выберите --</option>
-            <option>Кардиология</option>
-            <option>Неврология</option>
-            <option>Гастроэнтерология</option>
-          </select>
+          <label>Специальность *</label>
+          <Select
+            style={{ width: '100%' }}
+            placeholder="Куда направляем"
+            value={referralSpecId}
+            onChange={setReferralSpecId}
+            options={specializations.map((s) => ({ value: s.id, label: s.name }))}
+          />
         </div>
+        <div className="input-group">
+          <label>Причина (необязательно)</label>
+          <input
+            type="text"
+            className="input-field"
+            placeholder="Например: консультация кардиолога"
+            value={referralReason}
+            onChange={(e) => setReferralReason(e.target.value)}
+          />
+        </div>
+        <p className="text-xs text-muted">
+          Направление уйдёт в регистратуру вместе с завершением приёма. До завершения
+          его можно отменить кнопкой «Отменить» в карточке слева.
+        </p>
       </Modal>
     </div>
   );
+}
+
+/** «10:40» — время записи из ISO-строки бэкенда. */
+function dayjsLocal(iso: string): string {
+  return iso.slice(11, 16);
 }
