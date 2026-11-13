@@ -204,6 +204,83 @@ input, select, textarea { font-family: inherit; }
   flex: 1;
 }
 
+/* Сетка кабинетов для живых данных API (каждый кабинет — карточка) */
+.board-rooms {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 32px;
+  flex: 1;
+  align-content: start;
+}
+
+.board-room {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 30px;
+  padding: 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.board-room-active {
+  background: linear-gradient(135deg, #0F8B78 0%, #0c7262 100%);
+  border-color: transparent;
+  animation: pulse-border 2s infinite;
+}
+
+.board-room-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+}
+
+.board-room-number {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1;
+}
+
+.board-room-spec {
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: right;
+}
+
+.board-called-numbers {
+  font-size: 7rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #FFFFFF;
+  text-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.board-room-hint {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.board-waiting-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.board-waiting-chip {
+  color: #FFFFFF;
+  font-size: 2rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 2px 14px;
+}
+
 .board-called-box {
   background: linear-gradient(135deg, #0F8B78 0%, #0c7262 100%);
   border-radius: 30px;

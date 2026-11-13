@@ -1,58 +1,63 @@
-import { useState, useEffect } from 'react';
+/**
+ * Табло очереди для ТВ (E7): тёмный киоск-режим без авторизации, живые данные
+ * GET /api/board с опросом раз в 5 секунд. Доступ ограничивается на уровне
+ * сети/nginx (D2), не логином; персональных данных пациентов нет — только номера.
+ */
 
-interface CalledPatient {
-  ticket: string;
-  room: string;
-  doctor: string;
-}
+import { useEffect, useState } from 'react';
 
-interface QueueItem {
-  id: string;
-  ticket: string;
-  name: string;
+import { api } from '@pandora/shared';
+import type { components } from '@pandora/shared';
+
+type BoardOut = components['schemas']['BoardOut'];
+
+const POLL_MS = 5000;
+
+const WEEKDAYS = [
+  'воскресенье',
+  'понедельник',
+  'вторник',
+  'среда',
+  'четверг',
+  'пятница',
+  'суббота',
+];
+
+/** «5 ноября 2026, четверг» из даты ответа API. */
+function formatBoardDate(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getDate()} ${d.toLocaleString('ru-RU', { month: 'long' })} ${d.getFullYear()}, ${WEEKDAYS[d.getDay()]}`;
 }
 
 export default function Board() {
-  const [called, setCalled] = useState<CalledPatient | null>(null);
-  const [queue, setQueue] = useState<QueueItem[]>([]);
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [data, setData] = useState<BoardOut | null>(null);
+  const [offline, setOffline] = useState(false);
+  const [now, setNow] = useState(() => new Date());
 
-  // Функция получения данных из localStorage
-  const fetchData = () => {
-    const savedCalled = localStorage.getItem('board_called');
-    const savedQueue = localStorage.getItem('board_queue');
-
-    if (savedCalled) {
-      setCalled(JSON.parse(savedCalled));
-    } else {
-      // Демо-данные для первоначального вида
-      setCalled({ ticket: 'G-019', room: '101', doctor: 'Анна Иванова' });
-    }
-
-    if (savedQueue) {
-      setQueue(JSON.parse(savedQueue));
-    } else {
-      setQueue([
-        { id: '1', ticket: 'G-020', name: 'Белла' },
-        { id: '2', ticket: 'G-021', name: 'Даниил' },
-        { id: '3', ticket: 'G-022', name: 'Мария' },
-      ]);
-    }
-  };
-
+  // живые часы каждую секунду
   useEffect(() => {
-    // Инициализация при загрузке
-    fetchData();
+    const timer = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
-    // Автообновление данных каждые 5 секунд
-    const dataInterval = setInterval(fetchData, 5000);
-
-    // Обновление часов каждую секунду
-    const clockInterval = setInterval(() => setCurrentTime(new Date()), 1000);
-
+  // опрос табло: раз в 5 секунд; при сбое держим последние данные
+  useEffect(() => {
+    let cancelled = false;
+    const poll = async () => {
+      const { data: body } = await api.GET('/api/board');
+      if (cancelled) return;
+      if (body) {
+        setData(body);
+        setOffline(false);
+      } else {
+        setOffline(true);
+      }
+    };
+    void poll();
+    const timer = setInterval(() => void poll(), POLL_MS);
     return () => {
-      clearInterval(dataInterval);
-      clearInterval(clockInterval);
+      cancelled = true;
+      clearInterval(timer);
     };
   }, []);
 
@@ -67,40 +72,72 @@ export default function Board() {
           </div>
         </div>
         <div style={{ fontVariantNumeric: 'tabular-nums', fontSize: '3rem', fontWeight: 300 }}>
-          {currentTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+          {now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
         </div>
       </div>
 
-      <div className="board-content">
-        {/* Блок вызванного пациента */}
-        <div className="board-called-box">
-          <div style={{ fontSize: '2rem', textTransform: 'uppercase', letterSpacing: 4, opacity: 0.8, marginBottom: 20 }}>
-            Приглашается
-          </div>
-          {called ? (
-            <>
-              <div className="board-called-ticket">{called.ticket}</div>
-              <div className="board-called-room">Кабинет {called.room}</div>
-            </>
-          ) : (
-            <div style={{ fontSize: '4rem', fontWeight: 600 }}>Ожидайте</div>
-          )}
+      {data && (
+        <div style={{ fontSize: '1.4rem', color: 'rgba(255,255,255,0.55)', marginBottom: 24 }}>
+          {formatBoardDate(data.date)}
+          {offline && ' · нет связи, показаны последние данные'}
         </div>
+      )}
 
-        {/* Очередь */}
-        <div className="board-queue-list">
-          <div className="board-queue-title">Следующие</div>
-          {queue.map((item, index) => (
-            <div key={item.id} className="board-queue-item">
-              <span style={{ color: index === 0 ? 'var(--primary)' : 'white', fontWeight: 700 }}>{item.ticket}</span>
-              <span style={{ fontSize: '1.5rem', opacity: 0.7 }}>{item.name}</span>
+      {!data ? (
+        <div style={{ fontSize: '2.5rem', color: 'rgba(255,255,255,0.85)', flex: 1, display: 'flex', alignItems: 'center' }}>
+          {offline ? 'Нет связи с сервером — проверьте подключение' : 'Загрузка…'}
+        </div>
+      ) : data.rooms.length === 0 ? (
+        <div style={{ fontSize: '2.5rem', color: 'rgba(255,255,255,0.85)', flex: 1, display: 'flex', alignItems: 'center' }}>
+          Смены ещё не открыты — кабинеты не закреплены
+        </div>
+      ) : (
+        <div className="board-rooms">
+          {data.rooms.map((room) => (
+            <div
+              key={room.workday_id}
+              className={`board-room ${room.current.length > 0 ? 'board-room-active' : ''}`}
+            >
+              <div className="board-room-title">
+                <div className="board-room-number">Кабинет {room.room_number}</div>
+                <div className="board-room-spec">
+                  {room.specialization_name ?? ''}
+                  {room.doctor_name && (
+                    <>
+                      <br />
+                      {room.doctor_name}
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {room.current.length > 0 ? (
+                <>
+                  <div className="board-called-numbers">
+                    {room.current.map((t) => t.number).join('  ')}
+                  </div>
+                  <div className="board-room-hint">пройдите в кабинет</div>
+                </>
+              ) : (
+                <div className="board-room-hint" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                  Ожидайте вызова
+                </div>
+              )}
+
+              <div className="board-waiting-row">
+                <span>Очередь:</span>
+                {room.waiting_numbers.length === 0 ? (
+                  <span style={{ fontSize: '1.6rem' }}>пусто</span>
+                ) : (
+                  room.waiting_numbers.map((number) => (
+                    <span key={number} className="board-waiting-chip">{number}</span>
+                  ))
+                )}
+              </div>
             </div>
           ))}
-          {queue.length === 0 && (
-            <div style={{ fontSize: '1.5rem', color: 'var(--text-muted)' }}>Очередь пуста</div>
-          )}
         </div>
-      </div>
+      )}
     </div>
   );
 }
