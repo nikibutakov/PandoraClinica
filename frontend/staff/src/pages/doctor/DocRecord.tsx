@@ -374,7 +374,8 @@ export default function DocRecord() {
                   className="btn btn-danger-outline btn-sm"
                   onClick={() => {
                     setDiagnoses((prev) => prev.filter((_, j) => j !== i));
-                    setPrimaryIndex((p) => (p >= diagnoses.length - 1 ? 0 : p));
+                    // основной сдвигается вместе с удалением строки, а не «молча» переезжает
+                    setPrimaryIndex((p) => (p === i ? 0 : p > i ? p - 1 : p));
                   }}
                 >
                   Удалить

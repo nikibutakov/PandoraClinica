@@ -3,7 +3,7 @@
  * иностранцам — счётчики и скачивание JSON (ручной вариант вечерней выгрузки).
  */
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { App, DatePicker } from "antd";
 import dayjs from "dayjs";
 import type { Dayjs } from "dayjs";
@@ -26,25 +26,48 @@ function downloadJson(filename: string, payload: unknown) {
   URL.revokeObjectURL(url);
 }
 
+/** Чистый запрос выгрузки за дату — без обращений к состоянию компонента. */
+const fetchDaily = (forDate: Dayjs | null) =>
+  api.GET("/api/admin/reports/daily", {
+    params: {
+      query: forDate ? { date: forDate.format("YYYY-MM-DD") } : {},
+    },
+  });
+
 export default function AdminExports() {
   const { message } = App.useApp();
   const [date, setDate] = useState<Dayjs | null>(dayjs());
   const [report, setReport] = useState<DailyExportOut | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  // счётчик запросов: ответ с устаревшим номером отбрасывается
+  const reportSeq = useRef(0);
 
-  const load = async () => {
-    setLoading(true);
-    const {
-      data,
-      error: errBody,
-      response,
-    } = await api.GET("/api/admin/reports/daily", {
-      params: {
-        query: date ? { date: date.format("YYYY-MM-DD") } : {},
-      },
-    });
-    setLoading(false);
+  // счётчики дня загружаются сразу при открытии и смене даты
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const { data, error: errBody, response } = await fetchDaily(date);
+      if (cancelled) return;
+      if (data) {
+        setReport(data);
+        setError("");
+      } else {
+        setError(formatApiError(errBody, response.status));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [date]);
+
+  /** Запрос выгрузки за дату: обновляет report/error и возвращает результат. */
+  const fetchReport = async (
+    forDate: Dayjs | null,
+  ): Promise<DailyExportOut | null> => {
+    const seq = ++reportSeq.current;
+    const { data, error: errBody, response } = await fetchDaily(forDate);
+    if (seq !== reportSeq.current) return null;
     if (data) {
       setReport(data);
       setError("");
@@ -54,12 +77,14 @@ export default function AdminExports() {
     return null;
   };
 
-  /** Загрузить (если нужно) и скачать выбранный фрагмент выгрузки. */
+  /** Скачать выбранный фрагмент выгрузки (подтягивая свежие данные за дату). */
   const download = async (group: "ru" | "foreign") => {
+    setLoading(true);
     const current =
       report && date && report.date === date.format("YYYY-MM-DD")
         ? report
-        : await load();
+        : await fetchReport(date);
+    setLoading(false);
     if (!current) {
       message.warning("Сначала загрузите выгрузку за дату");
       return;

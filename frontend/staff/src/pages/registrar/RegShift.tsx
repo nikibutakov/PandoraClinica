@@ -27,6 +27,9 @@ function initials(fullName: string | null): string {
 const hhmm = (iso: string | null) =>
   iso ? iso.slice(11, 16).replace(/^0/, "") : "—";
 
+/** Окно графика — time-only «09:00:00» из бэкенда, не datetime. */
+const hhmmTime = (t: string) => t.slice(0, 5).replace(/^0/, "");
+
 export default function RegShift() {
   const { message } = App.useApp();
   const [data, setData] = useState<MorningOut | null>(null);
@@ -205,7 +208,7 @@ export default function RegShift() {
                     <div className="flex gap-1 flex-wrap">
                       {d.windows.map((w, i) => (
                         <span key={i} className="badge badge-new">
-                          {hhmm(w.start_time)}–{hhmm(w.end_time)}
+                          {hhmmTime(w.start_time)}–{hhmmTime(w.end_time)}
                         </span>
                       ))}
                     </div>

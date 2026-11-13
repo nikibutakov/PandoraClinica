@@ -290,11 +290,6 @@ export default function RegBooking() {
         <div className="booking-step">
           <div className="step-title">2. Дата и время</div>
           <div className="calendar-mock">
-            {["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"].map((d) => (
-              <div key={d} className="cal-header">
-                {d}
-              </div>
-            ))}
             {days.map((d) => (
               <div
                 key={d.format("YYYY-MM-DD")}
@@ -304,6 +299,9 @@ export default function RegBooking() {
                   setSlotId(null);
                 }}
               >
+                {/* свой день недели у каждой ячейки: лента идёт от сегодняшнего дня */}
+                {d.format("dd")}
+                <br />
                 {d.format("D")}
               </div>
             ))}
