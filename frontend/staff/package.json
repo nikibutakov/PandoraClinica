@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ant-design/icons": "^5.5.1",
     "@ant-design/v5-patch-for-react-19": "1.0.3",
     "@pandora/shared": "0.1.0",
     "antd": "5.29.3",
